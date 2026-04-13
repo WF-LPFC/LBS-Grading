@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LBS Quarterly Scorecard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0e0e0c;--ink2:#4a4a46;--ink3:#8a8a84;
+  --paper:#faf8f4;--paper2:#f2efe9;--paper3:#e8e4dc;
+  --rule:#d8d3c8;--rule2:#c4bfb4;
+  --blue:#1a5fa8;--blue-l:#e8f0fb;--blue-m:#c0d4f4;
+  --green:#2d6a1f;--green-l:#e6f3e0;
+  --amber:#8a5200;--amber-l:#fdf0d8;
+  --red:#8a1f1f;--red-l:#fde8e8;
+  --teal:#0d6655;--teal-l:#e0f4f0;
+  --r:6px;--r-lg:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.04);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
+
+/* ── Header ── */
+.header{background:var(--ink);color:#fff;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+.header-logo{font-family:'DM Serif Display',serif;font-size:17px;letter-spacing:.3px}
+.header-right{display:flex;align-items:center;gap:12px}
+.header-badge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8)}
+.platform-select{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:6px 12px;border-radius:var(--r);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;appearance:none;-webkit-appearance:none;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23fff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.platform-select option{background:#1a1a18;color:#fff}
+
+/* ── Setup screen ── */
+.setup-screen{max-width:480px;margin:80px auto;padding:0 24px;text-align:center}
+.setup-logo{font-family:'DM Serif Display',serif;font-size:32px;margin-bottom:8px}
+.setup-sub{color:var(--ink3);font-size:15px;margin-bottom:40px;line-height:1.6}
+.setup-card{background:#fff;border:1px solid var(--rule);border-radius:var(--r-lg);padding:32px;box-shadow:var(--shadow);text-align:left}
+.setup-label{font-size:12px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.setup-select{width:100%;padding:10px 14px;border:1.5px solid var(--rule2);border-radius:var(--r);font-size:15px;font-family:'DM Sans',sans-serif;color:var(--ink);background:#fff;cursor:pointer;margin-bottom:20px}
+.setup-select:focus{outline:none;border-color:var(--blue)}
+.setup-quarter{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+.setup-quarter select{padding:10px 14px;border:1.5px solid var(--rule2);border-radius:var(--r);font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);background:#fff}
+.setup-quarter select:focus{outline:none;border-color:var(--blue)}
+.btn-start{width:100%;padding:12px;background:var(--ink);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .15s}
+.btn-start:hover{background:#2a2a28}
+.existing-note{margin-top:16px;padding:12px;background:var(--blue-l);border-radius:var(--r);font-size:12px;color:var(--blue);display:none}
+
+/* ── Scorecard ── */
+.scorecard-wrap{max-width:860px;margin:0 auto;padding:32px 24px 80px}
+.scorecard-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
+.scorecard-identity h1{font-family:'DM Serif Display',serif;font-size:26px;margin-bottom:4px}
+.scorecard-identity .quarter-tag{font-size:13px;color:var(--ink3)}
+.score-dial{text-align:right}
+.dial-value{font-family:'DM Serif Display',serif;font-size:48px;line-height:1;color:var(--ink)}
+.dial-max{font-size:14px;color:var(--ink3);margin-top:2px}
+.dial-bar{width:180px;height:6px;background:var(--paper3);border-radius:3px;margin-top:8px;overflow:hidden}
+.dial-fill{height:100%;border-radius:3px;background:var(--blue);transition:width .4s}
+
+/* Section card */
+.section-card{background:#fff;border:1px solid var(--rule);border-radius:var(--r-lg);margin-bottom:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.section-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;cursor:pointer;user-select:none;transition:background .12s}
+.section-head:hover{background:var(--paper2)}
+.section-head-left{display:flex;align-items:center;gap:10px}
+.section-num{width:28px;height:28px;border-radius:50%;background:var(--paper2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--ink2)}
+.section-title{font-size:15px;font-weight:600}
+.section-wt{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:4px}
+.wt-high{background:var(--blue-l);color:var(--blue)}
+.wt-med{background:var(--paper3);color:var(--ink2)}
+.wt-low{background:var(--paper2);color:var(--ink3)}
+.section-head-right{display:flex;align-items:center;gap:10px}
+.section-pts{font-family:'DM Serif Display',serif;font-size:20px;color:var(--blue)}
+.section-pts-max{font-size:12px;color:var(--ink3)}
+.section-arrow{font-size:14px;color:var(--ink3);transition:transform .2s}
+.section-arrow.open{transform:rotate(180deg)}
+.section-body{padding:0 20px 4px;border-top:1px solid var(--rule)}
+
+/* Subgroup */
+.subgroup{margin:12px 0}
+.subgroup-name{font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.7px;padding:6px 0;border-bottom:1px dashed var(--rule);margin-bottom:4px}
+
+/* Objective row */
+.obj-row{padding:12px 0;border-bottom:1px solid var(--paper2)}
+.obj-row:last-child{border-bottom:none}
+.obj-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:8px}
+.obj-label{font-size:13px;line-height:1.5;flex:1;color:var(--ink)}
+.score-row{display:flex;gap:5px;flex-shrink:0}
+.s-btn{width:36px;height:36px;border-radius:var(--r);border:1.5px solid var(--rule2);background:#fff;cursor:pointer;font-size:13px;font-weight:700;color:var(--ink3);transition:all .12s;font-family:'DM Sans',sans-serif}
+.s-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-l);transform:translateY(-1px)}
+.s-btn.sel-1{background:var(--red-l);border-color:#e05050;color:var(--red)}
+.s-btn.sel-2{background:var(--amber-l);border-color:#d08030;color:var(--amber)}
+.s-btn.sel-3{background:var(--blue-l);border-color:#4090d0;color:var(--blue)}
+.s-btn.sel-4{background:var(--green-l);border-color:#50a040;color:var(--green)}
+.s-btn.sel-5{background:var(--teal-l);border-color:#20a080;color:var(--teal)}
+.criteria-bar{display:flex;gap:8px;margin-bottom:8px}
+.criteria-pill{flex:1;padding:5px 8px;border-radius:var(--r);font-size:11px;line-height:1.4}
+.criteria-1{background:var(--red-l);color:var(--red);border-left:3px solid #e05050}
+.criteria-5{background:var(--teal-l);color:var(--teal);border-left:3px solid #20a080}
+.criteria-label{font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.obj-comment{width:100%}
+.comment-in{width:100%;padding:6px 10px;border:1.5px solid var(--rule);border-radius:var(--r);font-size:12px;font-family:'DM Sans',sans-serif;color:var(--ink);resize:none;height:40px;transition:border-color .12s;background:var(--paper)}
+.comment-in:focus{outline:none;border-color:var(--blue);height:64px;background:#fff}
+
+/* Category bar summary */
+.cat-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:24px}
+.cat-bar-item{background:#fff;border:1px solid var(--rule);border-radius:var(--r);padding:10px;text-align:center}
+.cat-bar-name{font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;margin-bottom:6px}
+.cat-bar-score{font-size:16px;font-weight:700;font-family:'DM Serif Display',serif;margin-bottom:4px}
+.cat-bar-track{height:4px;background:var(--paper3);border-radius:2px;overflow:hidden}
+.cat-bar-fill{height:100%;border-radius:2px;background:var(--blue)}
+
+/* History strip */
+.history-strip{background:#fff;border:1px solid var(--rule);border-radius:var(--r-lg);padding:16px 20px;margin-bottom:20px}
+.history-label{font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
+.history-bars{display:flex;align-items:flex-end;gap:8px;height:48px}
+.h-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.h-bar{border-radius:3px 3px 0 0;background:var(--blue-m);width:100%;transition:background .2s;min-height:3px}
+.h-bar.current{background:var(--blue)}
+.h-period{font-size:9px;color:var(--ink3);text-align:center}
+.h-score{font-size:10px;font-weight:700;color:var(--ink2);text-align:center}
+
+/* Actions */
+.action-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--rule);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;z-index:50;box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+.action-status{font-size:13px;color:var(--ink3)}
+.action-status strong{color:var(--ink)}
+.action-btns{display:flex;gap:10px}
+.btn{padding:9px 20px;border-radius:var(--r);border:1.5px solid var(--rule2);background:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;color:var(--ink);transition:all .12s}
+.btn:hover{background:var(--paper2)}
+.btn-primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn-primary:hover{background:#2a2a28}
+.btn-submit{background:#1a6640;color:#fff;border-color:#1a6640}
+.btn-submit:hover{background:#155535}
+
+/* Toast */
+.toast{position:fixed;top:70px;right:24px;background:var(--ink);color:#fff;padding:12px 20px;border-radius:var(--r-lg);font-size:13px;font-weight:500;z-index:999;transform:translateY(-8px);opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green)}
+.toast.warning{background:var(--amber)}
+
+/* Already submitted banner */
+.submitted-banner{background:var(--green-l);border:1px solid #90d080;border-radius:var(--r-lg);padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--green)}
+
+/* Post-submit dashboard */
+.post-submit{max-width:860px;margin:0 auto;padding:40px 24px 80px;display:none}
+.ps-hero{text-align:center;margin-bottom:40px}
+.ps-check{width:56px;height:56px;border-radius:50%;background:var(--green-l);border:2px solid #90d080;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 16px}
+.ps-title{font-family:'DM Serif Display',serif;font-size:28px;margin-bottom:6px}
+.ps-sub{font-size:14px;color:var(--ink3)}
+.ps-score-big{font-family:'DM Serif Display',serif;font-size:64px;line-height:1;color:var(--blue);margin:16px 0 4px}
+.ps-score-label{font-size:13px;color:var(--ink3)}
+.ps-section-title{font-size:13px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.6px;margin:32px 0 12px}
+.ps-cat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:32px}
+.ps-cat{background:#fff;border:1px solid var(--rule);border-radius:var(--r-lg);padding:12px;text-align:center}
+.ps-cat-name{font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.ps-cat-score{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:4px}
+.ps-cat-max{font-size:10px;color:var(--ink3)}
+.ps-cat-bar{height:4px;background:var(--paper3);border-radius:2px;margin-top:6px;overflow:hidden}
+.ps-cat-fill{height:100%;border-radius:2px}
+.ps-history-card{background:#fff;border:1px solid var(--rule);border-radius:var(--r-lg);padding:20px;margin-bottom:20px}
+.ps-chart-wrap{position:relative;height:220px;margin-top:12px}
+.ps-back{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r);border:1.5px solid var(--rule2);background:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;color:var(--ink);margin-top:8px}
+.ps-back:hover{background:var(--paper2)}
+/* History reference tab */
+.hist-scroll{overflow-x:auto}
+.hist-table{width:100%;border-collapse:collapse;font-size:11px;min-width:400px}
+.hist-table th{padding:4px 8px;text-align:center;font-weight:700;color:var(--ink3);border-bottom:1px solid var(--rule);white-space:nowrap;font-size:10px}
+.hist-table th.obj-col{text-align:left}
+.hist-table td{padding:4px 8px;text-align:center;border-bottom:1px solid var(--paper2)}
+.hist-table td.obj-name{text-align:left;font-size:11px;color:var(--ink3);line-height:1.3;max-width:240px}
+.hist-table .sec-row td{background:var(--paper2);font-weight:700;color:var(--ink2);font-size:11px}
+.hist-table tr:last-child td{border-bottom:none}
+.hs{display:inline-block;min-width:22px;height:22px;border-radius:3px;font-size:11px;font-weight:700;line-height:22px;text-align:center;padding:0 3px}
+.hs-1{background:var(--red-l);color:var(--red)}.hs-2{background:var(--amber-l);color:var(--amber)}
+.hs-3{background:var(--blue-l);color:var(--blue)}.hs-4{background:var(--green-l);color:var(--green)}
+.hs-5{background:var(--teal-l);color:var(--teal)}.hs-0{background:var(--paper3);color:var(--ink4);font-size:9px}
+.ps-sec-card{background:#fff;border:1px solid var(--rule);border-radius:var(--r-lg);margin-bottom:12px;overflow:hidden}
+.ps-sec-head{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:var(--paper2);border-bottom:1px solid var(--rule)}
+.ps-sec-name{font-size:14px;font-weight:700}
+.ps-sec-pts{font-family:'DM Serif Display',serif;font-size:18px;color:var(--blue)}
+.ps-sec-pts-max{font-size:12px;color:var(--ink3);margin-left:3px}
+.ps-obj-row{display:grid;grid-template-columns:1fr auto;gap:16px;padding:10px 18px;border-bottom:1px solid var(--paper2);align-items:start}
+.ps-obj-row:last-child{border-bottom:none}
+.ps-obj-label{font-size:13px;color:var(--ink);line-height:1.4}
+.ps-obj-comment{font-size:11px;color:var(--ink3);margin-top:4px;font-style:italic}
+.ps-score-badge{width:32px;height:32px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.ps-s-1{background:var(--red-l);color:var(--red)}
+.ps-s-2{background:var(--amber-l);color:var(--amber)}
+.ps-s-3{background:var(--blue-l);color:var(--blue)}
+.ps-s-4{background:var(--green-l);color:var(--green)}
+.ps-s-5{background:var(--teal-l);color:var(--teal)}
+.ps-s-0{background:var(--paper3);color:var(--ink3)}
+
+.sc-tab{padding:8px 20px;border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;color:var(--ink3);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
+.sc-tab:hover{color:var(--ink)}
+.sc-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">LP First Capital</div>
+  <div class="header-right">
+    <span class="header-badge" id="quarter-badge">LBS Scorecard</span>
+  </div>
+</header>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen" class="setup-screen">
+  <div class="setup-logo">LBS Scorecard</div>
+  <p class="setup-sub">Select your platform and the quarter you are completing to begin scoring.</p>
+  <div class="setup-card">
+    <div class="setup-label">Platform</div>
+    <select class="setup-select" id="platform-sel">
+      <option value="">— Select your platform —</option>
+      <option>United</option><option>Ripple</option><option>Ramp</option>
+      <option>Total Seminars</option><option>Open Road</option><option>Cascade</option>
+      <option>Alpha</option><option>Fastest Labs</option><option>Northpoint</option>
+      <option>Urgent</option><option>Zollege</option><option>REI</option>
+      <option>Curb</option><option>Rewind</option>
+    </select>
+    <div class="setup-label">Quarter</div>
+    <div class="setup-quarter">
+      <select id="year-sel">
+        <option>2025</option><option>2026</option><option>2027</option>
+      </select>
+      <select id="q-sel">
+        <option value="Q1">Q1 (Jan–Mar)</option>
+        <option value="Q2">Q2 (Apr–Jun)</option>
+        <option value="Q3">Q3 (Jul–Sep)</option>
+        <option value="Q4" selected>Q4 (Oct–Dec)</option>
+      </select>
+    </div>
+    <div class="existing-note" id="existing-note" style="display:none">📋 A draft exists for this quarter. Opening it now.</div>
+    <div id="locked-note" style="display:none;background:#fde8e8;border-radius:var(--r);padding:12px;font-size:12px;color:#8a1f1f;margin-top:16px;border:1px solid #f0b0b0">
+      🔒 This quarter has already been submitted and is locked.
+      <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+        <input type="password" id="regrade-pin" placeholder="Enter PIN to regrade" style="padding:5px 10px;border:1.5px solid #f0b0b0;border-radius:var(--r);font-size:12px;font-family:'DM Sans',sans-serif;width:180px;background:#fff;color:var(--ink)"/>
+        <button onclick="attemptRegrade()" style="padding:5px 12px;border-radius:var(--r);border:1.5px solid #e05050;background:#e05050;color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif">Unlock</button>
+      </div>
+    </div>
+    <button class="btn-start" onclick="startScorecard()">Open Scorecard →</button>
+  </div>
+</div>
+
+<!-- SCORECARD -->
+<div id="scorecard-wrap" class="scorecard-wrap hidden">
+  <div class="submitted-banner hidden" id="submitted-banner">
+    ✓ This scorecard has been submitted to LP First Capital. You can still view and update scores below.
+  </div>
+
+  <div class="scorecard-top">
+    <div class="scorecard-identity">
+      <h1 id="sc-platform-name">Platform</h1>
+      <div class="quarter-tag" id="sc-quarter-tag">Q4 2025 · LBS Scorecard</div>
+    </div>
+    <div class="score-dial">
+      <div class="dial-value" id="dial-value">0</div>
+      <div class="dial-max">of <span id="dial-max">213</span> possible</div>
+      <div class="dial-bar"><div class="dial-fill" id="dial-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- tabs -->
+  <div style="display:flex;gap:0;border-bottom:2px solid var(--rule);margin-bottom:20px">
+    <button class="sc-tab active" id="tab-grade" onclick="switchTab('grade')">Grade</button>
+    <button class="sc-tab" id="tab-history" onclick="switchTab('history')">Score History</button>
+  </div>
+
+  <!-- grade tab -->
+  <div id="tab-content-grade">
+    <!-- category summary -->
+    <div class="cat-summary" id="cat-summary"></div>
+    <!-- sections -->
+    <div id="sections-wrap"></div>
+  </div>
+
+  <!-- history tab -->
+  <div id="tab-content-history" class="hidden">
+    <div class="hist-scroll">
+      <table class="hist-table" id="hist-table"></table>
+    </div>
+  </div>
+
+  <div style="height:80px"></div>
+</div>
+
+<!-- POST-SUBMIT SUMMARY -->
+<div class="post-submit" id="post-submit">
+  <div class="ps-hero">
+    <div class="ps-check">✓</div>
+    <div class="ps-title" id="ps-title">Scorecard Submitted</div>
+    <div class="ps-sub" id="ps-sub">Q4 2025 · LP First Capital</div>
+    <div class="ps-score-big" id="ps-score-big">—</div>
+    <div class="ps-score-label">Overall LBS Score</div>
+  </div>
+
+  <div class="ps-section-title">Score by Category</div>
+  <div class="ps-cat-grid" id="ps-cat-grid"></div>
+
+  <div class="ps-section-title" style="margin-top:32px">Score History</div>
+  <div class="ps-history-card">
+    <div style="position:relative;height:200px"><canvas id="ps-history-chart"></canvas></div>
+  </div>
+
+  <div class="ps-section-title" style="margin-top:32px">Full Score Summary &amp; Comments</div>
+  <div class="ps-note" style="font-size:12px;color:var(--ink3);margin-bottom:16px">Use this as a reference throughout the quarter.</div>
+  <div id="ps-detail"></div>
+
+  <button class="ps-back" onclick="goBackToScorecard()">← Back to Scorecard</button>
+</div>
+
+<!-- ACTION BAR -->
+<div class="action-bar hidden" id="action-bar">
+  <div class="action-status">
+    <strong id="ab-scored">0</strong> of <strong id="ab-total">54</strong> objectives scored
+  </div>
+  <div class="action-btns">
+    <button class="btn" id="copy-prior-btn" onclick="copyPriorScores()" style="display:none">↩ Keep Last Quarter's Scores</button>
+    <button class="btn" onclick="saveDraft()">Save Draft</button>
+    <button class="btn btn-submit" onclick="submitScorecard()">Submit</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+const SECTIONS = [
+  { id:'dream', name:'Dream', weight:'Medium', weightVal:0.6, maxRaw:15,
+    subgroups:[
+      { name:'Dream Big', objectives:[
+        { id:'d1', label:'Organization has a clearly defined "Dream"', c1:'No clear vision or long-term goals', c5:'Highly defined, compelling vision deeply embedded in culture' }
+      ]},
+      { name:'Execute', objectives:[
+        { id:'d2', label:'Dream is communicated and adopted throughout the organization', c1:'Little to no articulation of future aspiration', c5:'Employees fully aligned; vision drives all strategic decisions' },
+        { id:'d3', label:'Organization has a clearly defined 10-year, 3-year, and 1-year goal', c1:'No clearly defined goals for any time frame', c5:'Well-defined, articulated goals for all three horizons across the organization' }
+      ]}
+    ]
+  },
+  { id:'structure', name:'Structure', weight:'Medium', weightVal:0.6, maxRaw:40,
+    subgroups:[
+      { name:'Documentation', objectives:[
+        { id:'s1', label:'Organization has a completed "Culture Document" (core values + expectations)', c1:'No Culture Document or formal documentation of core values', c5:'Fully completed, actively used, deeply integrated Culture Document' },
+        { id:'s2', label:'Organization maintains and tracks a robust "issue list"', c1:'No issue list or formal system for identifying/managing issues', c5:'Robust, detailed issue list actively tracked with thorough follow-up' },
+        { id:'s3', label:'Communication plan documented outlining company goals, updates, etc.', c1:'Communication plan nonexistent or severely lacking', c5:'Comprehensive, clearly documented plan effectively outlining all goals and updates' }
+      ]},
+      { name:'Meetings', objectives:[
+        { id:'s4', label:'Everyone is on a team that meets weekly', c1:'Not everyone on a team; meetings infrequent and disorganized', c5:'Every team member in well-structured, collaborative weekly meetings' },
+        { id:'s5', label:'Leadership team has an efficiently structured weekly meeting cadence to review the 90-day scorecard', c1:'Chaotic meetings; 90-day scorecard rarely reviewed', c5:'Highly efficient cadence; leadership regularly reviews scorecard with clear agendas' },
+        { id:'s6', label:'Quarterly cadence with Leadership to establish new 90-day objectives', c1:'No quarterly meetings with leadership; no formal goal-setting process', c5:'Well-defined regular quarterly process with clear actionable 90-day objectives' }
+      ]},
+      { name:'Accounting', objectives:[
+        { id:'s7', label:'GAAP accounting principles implemented', c1:'Financial statements do not adhere to GAAP', c5:'Fully implements GAAP with robust systems ensuring consistent compliance' },
+        { id:'s8', label:'Internal controls in place and being used', c1:'No internal controls; no formal procedures for accuracy or risk management', c5:'Comprehensive internal controls rigorously implemented, well-documented, regularly reviewed' }
+      ]}
+    ]
+  },
+  { id:'score', name:'Score', weight:'Medium', weightVal:0.6, maxRaw:35,
+    subgroups:[
+      { name:'Game Defined', objectives:[
+        { id:'sc1', label:'Robust quarterly goals defined for Leadership team', c1:'No defined 90-day objectives; no formal goal-setting process', c5:'Robust, clearly defined 90-day objectives fully integrated into planning' },
+        { id:'sc2', label:'Robust quarterly goals defined for each department/function', c1:'Departments have no 90-day objectives', c5:'Every department has robust, clearly defined quarterly objectives' },
+        { id:'sc3', label:'Robust quarterly goals defined for each individual', c1:'90-day objectives nonexistent or poorly defined', c5:'Each individual has clear, well-defined, SMART 90-day objectives' }
+      ]},
+      { name:'Inputs', objectives:[
+        { id:'sc4', label:'Weekly scoreboard developed and organization fully accountable to', c1:'No weekly scoreboard; no formal process for monitoring performance', c5:'Comprehensive weekly scoreboard fully integrated into performance management' }
+      ]},
+      { name:'Outputs', objectives:[
+        { id:'sc5', label:'Every member of the organization has and is accountable to a KPI (leading & lagging)', c1:'Not every member has defined KPIs; no formal tracking system', c5:'Every member has well-defined KPIs with strong accountability culture' }
+      ]},
+      { name:'Win/Lose', objectives:[
+        { id:'sc6', label:'Open book management system in place', c1:'No open book system; financial information kept secret', c5:'Open book system fully implemented with transparent financial and operational data' },
+        { id:'sc7', label:'Every member has a stake in the outcome; company/department/individual win together', c1:'Members have little sense of shared stakes or collective success', c5:'All members deeply aligned with collective outcomes at all levels' }
+      ]}
+    ]
+  },
+  { id:'people', name:'People', weight:'High', weightVal:0.8, maxRaw:40,
+    subgroups:[
+      { name:'Know', objectives:[
+        { id:'p1', label:'All key roles on the accountability chart filled (Sales, Operations, Finance)', c1:'Key roles not filled; significant gaps in accountability chart', c5:'All key roles fully filled with clearly defined responsibilities' },
+        { id:'p2', label:'Organizational chart completed and updated quarterly (who reports to who)', c1:'No organizational chart or significantly outdated', c5:'Fully complete org chart updated every quarter' }
+      ]},
+      { name:'Right People / Right Seats', objectives:[
+        { id:'p3', label:'Entire organization has been mapped against Get it, Want it, Capacity to do it matrix', c1:'Not mapped against GWC matrix; no formal evaluation process', c5:'Entire organization fully mapped with comprehensive GWC evaluation process' },
+        { id:'p4', label:'Members of organization are maximized against Get it, Want it, Capacity to do it matrix', c1:'Members not effectively evaluated or maximized against GWC matrix', c5:'Members thoroughly evaluated and maximized; optimal alignment of talent' },
+        { id:'p5', label:'Robust job description (KRA) document for every employee', c1:'No KRA documents or they are poorly defined', c5:'Comprehensive KRA documents for every employee, regularly updated' }
+      ]},
+      { name:'Grow', objectives:[
+        { id:'p6', label:'Quarterly cadence to review performance for every employee', c1:'No quarterly performance review cadence in place', c5:'Consistent quarterly reviews for every employee, well-documented and actionable' },
+        { id:'p7', label:'Annual performance evaluations completed for every employee', c1:'Annual evaluations not completed or highly inconsistent', c5:'Annual evaluations completed for every employee with clear development plans' },
+        { id:'p8', label:'Annual organizational review tracker completed', c1:'No annual organizational review tracker in place or completed', c5:'Annual organizational review tracker fully completed and effectively integrated' }
+      ]}
+    ]
+  },
+  { id:'process', name:'Process', weight:'Medium', weightVal:0.6, maxRaw:25,
+    subgroups:[
+      { name:'Finance', objectives:[
+        { id:'pr1', label:'SOPs defined and disseminated across major business functions (Sales, Operations, Finance)', c1:'No defined SOPs for any major business functions', c5:'Comprehensive, clearly defined SOPs for all major business functions, regularly updated' },
+        { id:'pr2', label:'Monthly financial close completed within 10 days of month end', c1:'Financial close not completed within 10 days; significant delays', c5:'Financial close reliably completed within 10 days every month' },
+        { id:'pr3', label:'Monthly accrual forecasts updated', c1:'Monthly accrual forecasts not updated regularly', c5:'Monthly accrual forecasts thoroughly and consistently updated each month' },
+        { id:'pr4', label:'Monthly balance sheet reconciliations completed', c1:'Monthly balance sheet reconciliations not completed', c5:'Monthly balance sheet reconciliations consistently and thoroughly completed' }
+      ]},
+      { name:'Technology', objectives:[
+        { id:'pr5', label:'Fully leveraged technology infrastructure to support scalable growth', c1:'Technology not effectively leveraged; minimal use in supporting processes', c5:'Technology fully leveraged and strategically integrated across all functions' }
+      ]}
+    ]
+  },
+  { id:'product', name:'Product', weight:'Low', weightVal:0.4, maxRaw:20,
+    subgroups:[
+      { name:'Audit', objectives:[
+        { id:'pd1', label:'Quarterly product audit completed and actions taken', c1:'Quarterly product audits not conducted; no actions taken', c5:'Quarterly product audits thoroughly completed; actionable insights effectively implemented' },
+        { id:'pd2', label:'Offer a fully differentiated and unique value proposition', c1:'Value proposition unclear or poorly communicated', c5:'Highly differentiated, compelling value proposition clearly communicated across all channels' }
+      ]},
+      { name:'Customer', objectives:[
+        { id:'pd3', label:'Hold a market leading customer NPS score and have a process for regularly maintaining it', c1:'No customer NPS measurement or process for soliciting feedback', c5:'Market-leading customer NPS with robust, regular measurement and improvement process' },
+        { id:'pd4', label:'Hold a market leading employee NPS score and have a process for soliciting feedback', c1:'No employee NPS measurement or feedback solicitation process', c5:'Market-leading employee NPS with consistent, structured feedback and improvement process' }
+      ]}
+    ]
+  },
+  { id:'revgen', name:'Revenue Generation', weight:'High', weightVal:0.8, maxRaw:30,
+    subgroups:[
+      { name:'Retention', objectives:[
+        { id:'r1', label:'Customer churn analysis and retention plan created and updated annually', c1:'No churn analysis or retention plan in place', c5:'Detailed churn analysis and retention plan created annually with clear action items' }
+      ]},
+      { name:'Growth', objectives:[
+        { id:'r2', label:'Bi-annual revenue generation whiteboarding cadence', c1:'No bi-annual revenue whiteboarding session; no structured ideation process', c5:'Bi-annual whiteboarding sessions well-structured with clear revenue initiatives' },
+        { id:'r3', label:'Weekly sales activity metrics tracked and reported on', c1:'Sales activity metrics not tracked or reported regularly', c5:'Comprehensive weekly sales activity metrics tracked and reported with clear accountability' },
+        { id:'r4', label:'Win/loss performance analysis performed monthly', c1:'No win/loss analysis performed', c5:'Monthly win/loss analysis performed with insights driving strategy and coaching' },
+        { id:'r5', label:'Track wallet share per customer and create an up-sell/cross-sell plan', c1:'No wallet share tracking or up-sell/cross-sell planning in place', c5:'Wallet share tracked per customer with robust up-sell/cross-sell plan actively executed' },
+        { id:'r6', label:'Quarterly pricing audit completed and actions taken', c1:'No quarterly pricing audit; pricing decisions made without formal review', c5:'Quarterly pricing audit completed with clear actions identified and implemented' }
+      ]}
+    ]
+  },
+  { id:'efficiency', name:'Efficiency', weight:'High', weightVal:0.8, maxRaw:30,
+    subgroups:[
+      { name:'Cost Management', objectives:[
+        { id:'e1', label:'Quarterly COGS analysis complete and savings captured', c1:'No COGS analysis performed; no formal process for capturing savings', c5:'Quarterly COGS analysis completed with savings consistently identified and captured' },
+        { id:'e2', label:'Bi-annual overhead cost analysis completed (as a % of revenue)', c1:'No overhead cost analysis; overhead not tracked as % of revenue', c5:'Bi-annual overhead cost analysis completed with clear benchmarks and improvement actions' },
+        { id:'e3', label:'CapEx ROI analysis completed on new purchases', c1:'No CapEx ROI analysis; purchases made without formal return analysis', c5:'CapEx ROI analysis consistently completed before and after major purchases' },
+        { id:'e4', label:'Quarterly labor efficiency review completed', c1:'No quarterly labor efficiency review; labor costs not systematically analyzed', c5:'Quarterly labor efficiency review completed with clear insights driving workforce decisions' },
+        { id:'e5', label:'Bi-annual supplier/vendor spend analysis completed', c1:'No supplier/vendor spend analysis; vendor relationships not systematically reviewed', c5:'Bi-annual supplier spend analysis completed with savings and optimizations identified' },
+        { id:'e6', label:'Zero-based budget in-place and integrated into reporting', c1:'No zero-based budgeting approach; no integration with reporting systems', c5:'Fully implemented zero-based budgeting seamlessly integrated into all reporting systems' }
+      ]}
+    ]
+  },
+  { id:'expansion', name:'Expansion', weight:'Low', weightVal:0.4, maxRaw:20,
+    subgroups:[
+      { name:'M&A', objectives:[
+        { id:'ex1', label:'Platform is add-on ready (stable, cash-flowing, infrastructure-rich)', c1:'Platform not add-on ready; unstable operations, weak cash flow, limited infrastructure', c5:'Platform fully add-on ready: stable, cash-flowing, with rich infrastructure to support integration' },
+        { id:'ex2', label:'M&A playbook defined to include buy box (size, geography, product mix) and integration process', c1:'No M&A playbook; no defined buy box or integration process', c5:'Comprehensive M&A playbook with detailed buy box and integration process defined' },
+        { id:'ex3', label:'Management team is actively participating in M&A activities', c1:'Management team not participating in M&A activities', c5:'Management team actively engaged in sourcing, evaluating, and executing M&A opportunities' }
+      ]},
+      { name:'De Novo', objectives:[
+        { id:'ex4', label:'Robust de novo expansion playbook (strategy + execution) developed', c1:'No de novo expansion playbook; no strategy or execution framework', c5:'Comprehensive de novo playbook with detailed strategy and execution framework fully developed' }
+      ]}
+    ]
+  },
+  { id:'results', name:'Results', weight:'High', weightVal:0.8, maxRaw:15,
+    subgroups:[
+      { name:'Financial', objectives:[
+        { id:'re1', label:'Quarterly revenue growth targets achieved', c1:'Quarterly revenue growth targets consistently missed', c5:'Quarterly revenue growth targets consistently achieved or exceeded' },
+        { id:'re2', label:'Quarterly EBITDA growth targets achieved', c1:'Quarterly EBITDA growth targets consistently missed', c5:'Quarterly EBITDA growth targets consistently achieved or exceeded' }
+      ]},
+      { name:'Operational', objectives:[
+        { id:'re3', label:'Achievement of all quarterly objectives', c1:'Quarterly objectives rarely achieved; low completion rate across teams', c5:'All quarterly objectives consistently achieved with high completion rate across all teams' }
+      ]}
+    ]
+  }
+];
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let state = { platform:'', quarter:'', year:'', scores:{}, comments:{}, submitted:false, priorScores:{}, priorPeriod:'', scoreHistory:[] };
+let openSections = new Set();
+
+// ─────────────────────────────────────────────
+// GOOGLE SHEETS BACKEND
+// ─────────────────────────────────────────────
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz6IYbVx6cvDyB8eifyOYgEUgeHP0xesdCJn8eSg-BDEbZj_-JIAFlfpc6VJFtnn4tQ/exec';
+
+async function gasGet(params){
+  const url = GAS_URL + '?' + new URLSearchParams(params).toString();
+  const r = await fetch(url);
+  return r.json();
+}
+
+async function gasPost(body){
+  const r = await fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
+async function loadExisting(platform, year, quarter){
+  try{
+    const rows = await gasGet({ action:'getScores', platform, year, quarter });
+    if(rows && rows.length > 0){
+      const d = rows[0];
+      return {
+        scores: d.scores || {},
+        comments: d.comments || {},
+        submitted: d.submitted === true || d.submitted === 'TRUE',
+        sectionTotals: d.section_totals || {},
+        overallScore: parseFloat(d.overall_score) || 0
+      };
+    }
+  }catch(e){ console.error('loadExisting error:', e); }
+  return null;
+}
+
+async function saveToStorage(submitted=false){
+  const payload = {
+    action: 'saveScore',
+    platform: state.platform,
+    year: state.year,
+    quarter: state.quarter,
+    scores: state.scores,
+    comments: state.comments,
+    submitted,
+    section_totals: computeSectionTotals(),
+    overall_score: computeOverall()
+  };
+  await gasPost(payload);
+  return payload;
+}
+
+// ─────────────────────────────────────────────
+// SETUP
+// ─────────────────────────────────────────────
+
+const SEED_SCORES = {
+  'Alpha': {
+    '2025-Q1': {'d1':2,'d2':2,'d3':1,'s1':3,'s2':3,'s3':1,'s4':4,'s5':2,'s6':3,'s7':3,'s8':3,'sc1':4,'sc2':4,'sc3':3,'sc4':3,'sc5':2,'sc6':3,'sc7':1,'p1':2,'p2':3,'p3':1,'p4':1,'p5':3,'p6':1,'p7':2,'p8':1,'pr1':1,'pr2':1,'pr3':3,'pr4':1,'pr5':1,'pd1':1,'pd2':3,'pd3':1,'pd4':1,'r1':1,'r2':1,'r3':2,'r4':1,'r5':1,'r6':3,'e1':2,'e2':2,'e3':1,'e4':2,'e5':1,'e6':1,'ex1':1,'ex2':1,'ex3':1,'ex4':1,'re1':1,'re2':1,'re3':3},
+    '2025-Q2': {'d1':2,'d2':2,'d3':1,'s1':3,'s2':4,'s3':2,'s4':4,'s5':3,'s6':3,'s7':3,'s8':3,'sc1':4,'sc2':4,'sc3':3,'sc4':3,'sc5':2,'sc6':3,'sc7':1,'p1':3,'p2':3,'p3':1,'p4':1,'p5':3,'p6':1,'p7':2,'p8':1,'pr1':1,'pr2':1,'pr3':1,'pr4':2,'pr5':2,'pd1':3,'pd2':3,'pd3':1,'pd4':1,'r1':1,'r2':1,'r3':3,'r4':1,'r5':1,'r6':3,'e1':3,'e2':2,'e3':1,'e4':2,'e5':2,'e6':1,'ex1':1,'ex2':1,'ex3':1,'ex4':1,'re1':1,'re2':1,'re3':3},
+    '2025-Q3': {'d1':2,'d2':1,'d3':1,'s1':2,'s2':3,'s3':2,'s4':4,'s5':3,'s6':3,'s7':3,'s8':3,'sc1':4,'sc2':4,'sc3':3,'sc4':3,'sc5':2,'sc6':3,'sc7':1,'p1':3,'p2':3,'p3':1,'p4':1,'p5':3,'p6':1,'p7':2,'p8':1,'pr1':1,'pr2':1,'pr3':1,'pr4':2,'pr5':2,'pd1':3,'pd2':3,'pd3':1,'pd4':1,'r1':1,'r2':1,'r3':3,'r4':1,'r5':1,'r6':3,'e1':3,'e2':2,'e3':1,'e4':3,'e5':2,'e6':1,'ex1':1,'ex2':1,'ex3':1,'ex4':1,'re1':1,'re2':1,'re3':2},
+    '2025-Q4': {'d1':2,'d2':1,'d3':1,'s1':2,'s2':3,'s3':2,'s4':4,'s5':3,'s6':3,'s7':3,'s8':3,'sc1':3,'sc2':3,'sc3':3,'sc4':3,'sc5':2,'sc6':3,'sc7':1,'p1':2,'p2':3,'p3':1,'p4':1,'p5':3,'p6':1,'p7':2,'p8':1,'pr1':1,'pr2':1,'pr3':1,'pr4':2,'pr5':2,'pd1':2,'pd2':3,'pd3':1,'pd4':1,'r1':1,'r2':1,'r3':2,'r4':1,'r5':1,'r6':3,'e1':2,'e2':2,'e3':1,'e4':2,'e5':2,'e6':1,'ex1':1,'ex2':1,'ex3':1,'ex4':1,'re1':1,'re2':1,'re3':2},
+  },
+  'Cascade': {
+    '2025-Q1': {'d1':3,'d2':3,'d3':3,'s1':2,'s2':5,'s3':5,'s4':5,'s5':5,'s6':5,'s7':5,'s8':5,'sc1':3,'sc2':3,'sc3':3,'sc4':4,'sc5':3,'sc6':2,'sc7':3,'p1':5,'p2':5,'p3':2,'p4':2,'p5':4,'p6':4,'p7':4,'p8':4,'pr1':3,'pr2':2,'pr3':4,'pr4':5,'pr5':5,'pd1':3,'pd2':3,'pd3':4,'pd4':2,'r1':2,'r2':3,'r3':4,'r4':3,'r5':3,'r6':4,'e1':5,'e2':5,'e3':5,'e4':5,'e5':5,'e6':5,'ex1':5,'ex2':5,'ex3':5,'ex4':3,'re1':3,'re2':3,'re3':3},
+    '2025-Q2': {'d1':3,'d2':3,'d3':3,'s1':2,'s2':5,'s3':5,'s4':5,'s5':5,'s6':5,'s7':5,'s8':5,'sc1':3,'sc2':3,'sc3':3,'sc4':4,'sc5':3,'sc6':2,'sc7':3,'p1':5,'p2':5,'p3':2,'p4':2,'p5':4,'p6':4,'p7':4,'p8':4,'pr1':3,'pr2':2,'pr3':4,'pr4':5,'pr5':5,'pd1':3,'pd2':3,'pd3':4,'pd4':2,'r1':2,'r2':3,'r3':4,'r4':3,'r5':3,'r6':4,'e1':5,'e2':5,'e3':5,'e4':5,'e5':5,'e6':5,'ex1':5,'ex2':5,'ex3':5,'ex4':3,'re1':3,'re2':3,'re3':3},
+    '2025-Q3': {'d1':3,'d2':3,'d3':3,'s1':2,'s2':5,'s3':5,'s4':5,'s5':5,'s6':5,'s7':5,'s8':5,'sc1':3,'sc2':3,'sc3':3,'sc4':4,'sc5':3,'sc6':2,'sc7':3,'p1':5,'p2':5,'p3':2,'p4':2,'p5':4,'p6':4,'p7':4,'p8':4,'pr1':3,'pr2':2,'pr3':4,'pr4':5,'pr5':5,'pd1':3,'pd2':3,'pd3':4,'pd4':2,'r1':2,'r2':3,'r3':4,'r4':3,'r5':3,'r6':4,'e1':5,'e2':5,'e3':5,'e4':5,'e5':5,'e6':5,'ex1':5,'ex2':5,'ex3':5,'ex4':3,'re1':3,'re2':3,'re3':3},
+    '2025-Q4': {'d1':3,'d2':3,'d3':3,'s1':2,'s2':5,'s3':5,'s4':5,'s5':5,'s6':5,'s7':5,'s8':5,'sc1':3,'sc2':3,'sc3':3,'sc4':4,'sc5':3,'sc6':2,'sc7':3,'p1':5,'p2':5,'p3':2,'p4':2,'p5':4,'p6':4,'p7':4,'p8':4,'pr1':3,'pr2':2,'pr3':4,'pr4':5,'pr5':5,'pd1':3,'pd2':3,'pd3':4,'pd4':2,'r1':2,'r2':3,'r3':4,'r4':3,'r5':3,'r6':4,'e1':5,'e2':5,'e3':5,'e4':5,'e5':5,'e6':5,'ex1':5,'ex2':5,'ex3':5,'ex4':3,'re1':3,'re2':3,'re3':3},
+  },
+  'Curb': {
+    '2025-Q1': {'d1':1,'d2':1,'d3':1,'s1':1,'s2':1,'s3':3,'s4':4,'s5':2,'s6':4,'s7':5,'s8':5,'sc1':4,'sc2':4,'sc3':2,'sc4':3,'sc5':2,'sc6':3,'sc7':3,'p1':3,'p2':4,'p3':2,'p4':2,'p5':2,'p6':3,'p7':3,'p8':3,'pr1':1,'pr2':3,'pr3':3,'pr4':3,'pr5':2,'pd1':3,'pd2':1,'pd3':1,'pd4':1,'r1':2,'r2':4,'r3':3,'r4':1,'r5':3,'r6':3,'e1':3,'e2':1,'e3':1,'e4':1,'e5':5,'e6':5,'ex1':5,'ex2':3,'ex3':1,'ex4':1,'re1':3},
+    '2025-Q2': {'d1':1,'d2':1,'d3':1,'s1':1,'s2':1,'s3':3,'s4':4,'s5':3,'s6':4,'s7':5,'s8':5,'sc1':4,'sc2':4,'sc3':2,'sc4':3,'sc5':2,'sc6':3,'sc7':3,'p1':3,'p2':4,'p3':2,'p4':2,'p5':2,'p6':3,'p7':3,'p8':3,'pr1':1,'pr2':3,'pr3':3,'pr4':3,'pr5':2,'pd1':3,'pd2':1,'pd3':1,'pd4':1,'r1':2,'r2':4,'r3':3,'r4':2,'r5':3,'r6':3,'e1':3,'e2':2,'e3':3,'e4':2,'e5':5,'e6':5,'ex1':5,'ex2':3,'ex3':1,'ex4':1,'re1':3},
+    '2025-Q3': {'d1':1,'d2':1,'d3':1,'s1':1,'s2':1,'s3':3,'s4':4,'s5':3,'s6':4,'s7':5,'s8':5,'sc1':4,'sc2':4,'sc3':2,'sc4':3,'sc5':2,'sc6':3,'sc7':3,'p1':4,'p2':4,'p3':2,'p4':2,'p5':2,'p6':3,'p7':3,'p8':3,'pr1':2,'pr2':4,'pr3':4,'pr4':3,'pr5':2,'pd1':3,'pd2':1,'pd3':1,'pd4':1,'r1':2,'r2':4,'r3':3,'r4':2,'r5':3,'r6':3,'e1':3,'e2':2,'e3':3,'e4':2,'e5':5,'e6':5,'ex1':5,'ex2':3,'ex3':1,'ex4':1,'re1':3},
+    '2025-Q4': {'d1':1,'d2':1,'d3':1,'s1':1,'s2':1,'s3':3,'s4':4,'s5':3,'s6':4,'s7':3,'s8':5,'sc1':4,'sc2':4,'sc3':2,'sc4':3,'sc5':2,'sc6':3,'sc7':3,'p1':3,'p2':4,'p3':1,'p4':1,'p5':2,'p6':3,'p7':3,'p8':3,'pr1':2,'pr2':1,'pr3':2,'pr4':3,'pr5':2,'pd1':3,'pd2':1,'pd3':1,'pd4':1,'r1':2,'r2':4,'r3':3,'r4':2,'r5':3,'r6':3,'e1':3,'e2':2,'e3':3,'e4':2,'e5':5,'e6':5,'ex1':5,'ex2':3,'ex3':1,'ex4':1,'re1':3},
+  },
+  'Fastest Labs': {
+    '2024-Q4': {'d1':3,'d2':2,'d3':4,'s1':2,'s2':1,'s3':1,'s4':4,'s5':2,'s6':3,'s7':4,'s8':3,'sc1':2,'sc2':2,'sc3':2,'sc4':1,'sc5':1,'sc6':1,'sc7':1,'p1':1,'p2':1,'p3':1,'p4':1,'p5':1,'p6':1,'p7':1,'p8':1,'pr1':1,'pr2':3,'pr3':3,'pr4':4,'pr5':3,'pd1':1,'pd2':3,'pd3':2,'pd4':1,'r1':2,'r2':3,'r3':2,'r4':1,'r5':1,'r6':1,'e1':3,'e2':4,'e3':1,'e4':2,'e5':3,'e6':1,'ex1':1,'ex2':1,'ex3':1,'ex4':3,'re1':5,'re2':5,'re3':2},
+    '2025-Q1': {'d1':3,'d2':2,'d3':4,'s1':2,'s2':2,'s3':2,'s4':4,'s5':2,'s6':3,'s7':4,'s8':3,'sc1':3,'sc2':2,'sc3':2,'sc4':3,'sc5':1,'sc6':1,'sc7':1,'p1':1,'p2':2,'p3':1,'p4':1,'p5':1,'p6':1,'p7':1,'p8':1,'pr1':1,'pr2':3,'pr3':3,'pr4':4,'pr5':3,'pd1':1,'pd2':3,'pd3':2,'pd4':1,'r1':2,'r2':3,'r3':3,'r4':2,'r5':1,'r6':1,'e1':3,'e2':4,'e3':1,'e4':2,'e5':3,'e6':1,'ex1':1,'ex2':1,'ex3':1,'ex4':3,'re1':3,'re2':3,'re3':3},
+    '2025-Q2': {'d1':3,'d2':3,'d3':4,'s1':2,'s2':3,'s3':3,'s4':4,'s5':2,'s6':4,'s7':4,'s8':3,'sc1':3,'sc2':3,'sc3':2,'sc4':3,'sc5':1,'sc6':1,'sc7':1,'p1':2,'p2':3,'p3':1,'p4':1,'p5':1,'p6':1,'p7':1,'p8':1,'pr1':2,'pr2':3,'pr3':3,'pr4':4,'pr5':3,'pd1':1,'pd2':3,'pd3':1,'pd4':1,'r1':2,'r2':3,'r3':3,'r4':2,'r5':1,'r6':1,'e1':3,'e2':4,'e3':1,'e4':2,'e5':3,'e6':2,'ex1':1,'ex2':1,'ex3':1,'ex4':3,'re1':1,'re2':1,'re3':3},
+    '2025-Q3': {'d1':3,'d2':3,'d3':4,'s1':3,'s2':3,'s3':4,'s4':4,'s5':3,'s6':4,'s7':4,'s8':3,'sc1':3,'sc2':3,'sc3':3,'sc4':3,'sc5':3,'sc6':2,'sc7':2,'p1':2,'p2':3,'p3':2,'p4':2,'p5':1,'p6':1,'p7':1,'p8':1,'pr1':2,'pr2':3,'pr3':3,'pr4':4,'pr5':2,'pd1':1,'pd2':3,'pd3':1,'pd4':1,'r1':2,'r2':3,'r3':3,'r4':2,'r5':1,'r6':1,'e1':3,'e2':4,'e3':1,'e4':2,'e5':3,'e6':2,'ex1':1,'ex2':1,'ex3':1,'ex4':3,'re1':1,'re2':1,'re3':3},
+    '2025-Q4': {'d1':3,'d2':3,'d3':4,'s1':4,'s2':4,'s3':4,'s4':4,'s5':3,'s6':4,'s7':4,'s8':3,'sc1':3,'sc2':3,'sc3':4,'sc4':4,'sc5':3,'sc6':2,'sc7':3,'p1':2,'p2':3,'p3':2,'p4':2,'p5':1,'p6':1,'p7':1,'p8':1,'pr1':2,'pr2':3,'pr3':3,'pr4':4,'pr5':2,'pd1':1,'pd2':3,'pd3':1,'pd4':1,'r1':2,'r2':3,'r3':3,'r4':2,'r5':1,'r6':1,'e1':3,'e2':4,'e3':1,'e4':2,'e5':3,'e6':3,'ex1':1,'ex2':1,'ex3':1,'ex4':3,'re1':2,'re2':1,'re3':3},
+  },
+  'Northpoint': {
+    '2025-Q1': {'d1':5,'d2':3,'d3':5,'s1':3,'s2':4,'s3':2,'s4':2,'s5':4,'s6':5,'s7':2,'s8':2,'sc1':3,'sc2':2,'sc3':1,'sc4':3,'sc5':1,'sc6':2,'sc7':2,'p1':4,'p2':4,'p3':3,'p4':3,'p5':1,'p6':1,'p7':1,'p8':4,'pr1':2,'pr2':4,'pr3':2,'pr4':2,'pr5':2,'pd1':2,'pd2':4,'pd3':4,'pd4':4,'r1':2,'r2':1,'r3':3,'r4':3,'r5':2,'r6':3,'e1':3,'e2':3,'e3':2,'e4':4,'e5':4,'e6':2,'ex1':1,'ex2':1,'ex3':2},
+    '2025-Q2': {'d1':5,'d2':3,'d3':5,'s1':3,'s2':4,'s3':2,'s4':2,'s5':4,'s6':5,'s7':2,'s8':2,'sc1':3,'sc2':2,'sc3':1,'sc4':2,'sc5':1,'sc6':2,'sc7':2,'p1':4,'p2':4,'p3':3,'p4':3,'p5':1,'p6':1,'p7':1,'p8':4,'pr1':2,'pr2':4,'pr3':2,'pr4':2,'pr5':2,'pd1':3,'pd2':4,'pd3':4,'pd4':4,'r1':2,'r2':1,'r3':3,'r4':3,'r5':2,'r6':3,'e1':3,'e2':3,'e3':2,'e4':4,'e5':4,'e6':2,'ex1':1,'ex2':1,'ex3':2},
+    '2025-Q3': {'d1':5,'d2':4,'d3':5,'s1':3,'s2':4,'s3':4,'s4':2,'s5':4,'s6':5,'s7':1,'s8':2,'sc1':3,'sc2':2,'sc3':1,'sc4':2,'sc5':1,'sc6':2,'sc7':4,'p1':4,'p2':4,'p3':3,'p4':3,'p5':1,'p6':3,'p7':1,'p8':4,'pr1':1,'pr2':4,'pr3':2,'pr4':2,'pr5':2,'pd1':3,'pd2':4,'pd3':4,'pd4':4,'r1':2,'r2':1,'r3':3,'r4':3,'r5':2,'r6':3,'e1':3,'e2':3,'e3':2,'e4':4,'e5':4,'e6':2,'ex1':1,'ex2':1,'ex3':2},
+    '2025-Q4': {'d1':5,'d2':5,'d3':5,'s1':3,'s2':4,'s3':4,'s4':3,'s5':4,'s6':5,'s7':2,'s8':3,'sc1':5,'sc2':2,'sc3':1,'sc4':4,'sc5':1,'sc6':3,'sc7':4,'p1':4,'p2':4,'p3':4,'p4':3,'p5':1,'p6':3,'p7':1,'p8':2,'pr1':1,'pr2':4,'pr3':2,'pr4':3,'pr5':2,'pd1':3,'pd2':4,'pd3':2,'pd4':4,'r1':2,'r2':1,'r3':3,'r4':3,'r5':5,'r6':5,'e1':2,'e2':3,'e3':3,'e4':4,'e5':4,'e6':2,'ex1':1,'ex2':1,'ex3':2},
+  },
+  'Open Road': {
+    '2025-Q1': {'d1':4,'d2':3,'d3':5,'s1':3,'s2':3,'s3':4,'s4':5,'s5':5,'s6':3,'s7':5,'s8':5,'sc1':4,'sc2':3,'sc3':2,'sc4':2,'sc5':3,'sc6':3,'sc7':3,'p1':4,'p2':5,'p3':1,'p4':1,'p5':4,'p6':2,'p7':4,'p8':3,'pr1':5,'pr2':4,'pr3':5,'pr4':5,'pr5':5,'pd1':5,'pd2':4,'pd3':5,'pd4':2,'r1':5,'r2':4,'r3':5,'r4':5,'r5':4,'r6':4,'e1':5,'e2':5,'e3':5,'e4':3,'e5':5,'e6':5,'ex1':5,'ex2':5,'ex3':5,'ex4':2,'re1':3,'re2':3,'re3':2},
+    '2025-Q2': {'d1':4,'d2':3,'d3':5,'s1':3,'s2':3,'s3':4,'s4':5,'s5':5,'s6':3,'s7':5,'s8':5,'sc1':4,'sc2':3,'sc3':2,'sc4':2,'sc5':3,'sc6':3,'sc7':3,'p1':4,'p2':5,'p3':1,'p4':1,'p5':4,'p6':2,'p7':4,'p8':3,'pr1':5,'pr2':4,'pr3':5,'pr4':5,'pr5':5,'pd1':5,'pd2':4,'pd3':5,'pd4':2,'r1':5,'r2':4,'r3':5,'r4':5,'r5':4,'r6':4,'e1':5,'e2':5,'e3':5,'e4':3,'e5':5,'e6':5,'ex1':5,'ex2':5,'ex3':5,'ex4':2,'re1':3,'re2':3,'re3':2},
+    '2025-Q3': {'d1':4,'d2':3,'d3':5,'s1':3,'s2':3,'s3':4,'s4':5,'s5':5,'s6':3,'s7':5,'s8':5,'sc1':4,'sc2':3,'sc3':2,'sc4':2,'sc5':3,'sc6':3,'sc7':3,'p1':4,'p2':5,'p3':1,'p4':1,'p5':4,'p6':2,'p7':4,'p8':3,'pr1':5,'pr2':4,'pr3':5,'pr4':5,'pr5':5,'pd1':5,'pd2':4,'pd3':5,'pd4':2,'r1':5,'r2':4,'r3':5,'r4':5,'r5':4,'r6':4,'e1':5,'e2':5,'e3':5,'e4':3,'e5':5,'e6':5,'ex1':5,'ex2':5,'ex3':5,'ex4':2,'re1':3,'re2':3,'re3':2},
+    '2025-Q4': {'d1':4,'d2':3,'d3':5,'s1':3,'s2':3,'s3':4,'s4':5,'s5':5,'s6':3,'s7':5,'s8':5,'sc1':4,'sc2':3,'sc3':2,'sc4':2,'sc5':3,'sc6':3,'sc7':3,'p1':4,'p2':5,'p3':1,'p4':1,'p5':4,'p6':2,'p7':4,'p8':3,'pr1':5,'pr2':4,'pr3':5,'pr4':5,'pr5':5,'pd1':5,'pd2':4,'pd3':5,'pd4':2,'r1':5,'r2':4,'r3':5,'r4':5,'r5':4,'r6':4,'e1':5,'e2':5,'e3':5,'e4':3,'e5':5,'e6':5,'ex1':5,'ex2':5,'ex3':5,'ex4':2,'re1':3,'re2':3,'re3':2},
+  },
+  'Ramp': {
+    '2025-Q1': {'d1':2,'d2':2,'d3':2,'s1':3,'s2':4,'s3':1,'s4':3,'s5':4,'s6':4,'s7':2,'s8':1,'sc1':3,'sc2':2,'sc3':2,'sc4':3,'sc5':4,'sc6':2,'sc7':2,'p1':4,'p2':4,'p3':1,'p4':4,'p5':2,'p6':1,'p7':1,'p8':1,'pr1':2,'pr2':1,'pr3':1,'pr4':1,'pr5':3,'pd1':4,'pd2':3,'pd3':3,'pd4':4,'r1':2,'r2':4,'r3':1,'r4':3,'r5':1,'r6':1,'e1':4,'e2':4,'e3':1,'e4':4,'e5':1,'e6':1,'ex1':2,'ex2':2,'ex3':2,'ex4':2,'re1':3,'re2':1,'re3':3},
+    '2025-Q2': {'d1':2,'d2':2,'d3':2,'s1':3,'s2':4,'s3':1,'s4':3,'s5':4,'s6':4,'s7':2,'s8':1,'sc1':3,'sc2':2,'sc3':2,'sc4':2,'sc5':3,'sc6':1,'sc7':2,'p1':3,'p2':3,'p3':1,'p4':1,'p5':2,'p6':2,'p7':1,'p8':1,'pr1':2,'pr2':2,'pr3':1,'pr4':1,'pr5':3,'pd1':2,'pd2':2,'pd3':3,'pd4':1,'r1':2,'r2':1,'r3':1,'r4':1,'r5':1,'r6':1,'e1':4,'e2':4,'e3':1,'e4':3,'e5':2,'e6':1,'ex1':1,'ex2':1,'ex3':1,'ex4':1,'re1':1,'re2':1,'re3':3},
+    '2025-Q3': {'d1':2,'d2':2,'d3':2,'s1':3,'s2':4,'s3':1,'s4':3,'s5':4,'s6':4,'s7':2,'s8':1,'sc1':3,'sc2':2,'sc3':2,'sc4':2,'sc5':3,'sc6':1,'sc7':2,'p1':3,'p2':3,'p3':1,'p4':1,'p5':2,'p6':2,'p7':1,'p8':1,'pr1':2,'pr2':2,'pr3':1,'pr4':1,'pr5':3,'pd1':2,'pd2':2,'pd3':3,'pd4':1,'r1':2,'r2':1,'r3':1,'r4':1,'r5':1,'r6':1,'e1':4,'e2':4,'e3':1,'e4':3,'e5':2,'e6':1,'ex1':1,'ex2':1,'ex3':1,'ex4':1,'re1':1,'re2':1,'re3':3},
+    '2025-Q4': {'d1':2,'d2':2,'d3':2,'s1':3,'s2':4,'s3':1,'s4':2,'s5':3,'s6':3,'s7':2,'s8':1,'sc1':3,'sc2':2,'sc3':2,'sc4':3,'sc5':3,'sc6':1,'sc7':2,'p1':2,'p2':1,'p3':1,'p4':1,'p5':2,'p6':1,'p7':1,'p8':1,'pr1':2,'pr2':1,'pr3':1,'pr4':1,'pr5':2,'pd1':3,'pd2':2,'pd3':3,'pd4':1,'r1':1,'r2':1,'r3':3,'r4':2,'r5':1,'r6':1,'e1':4,'e2':4,'e3':1,'e4':4,'e5':1,'e6':1,'ex1':2,'ex2':2,'ex3':1,'ex4':1,'re1':1,'re2':1,'re3':2},
+  },
+  'REI': {
+    '2025-Q1': {'d1':4,'d2':3,'d3':2,'s1':3,'s2':3,'s3':1,'s4':4,'s5':4,'s6':3,'s7':3,'s8':4,'sc1':4,'sc2':2,'sc3':2,'sc4':3,'sc5':2,'sc6':2,'sc7':3,'p1':4,'p2':3,'p3':2,'p4':2,'p5':3,'p6':1,'p7':2,'p8':1,'pr1':3,'pr2':3,'pr3':4,'pr4':4,'pr5':3,'pd1':4,'pd2':4,'pd3':4,'pd4':4,'r1':2,'r2':3,'r3':3,'r4':3,'r5':2,'r6':1,'e1':2,'e2':3,'e3':1,'e4':2,'e5':1,'e6':3,'ex1':4,'ex2':4,'ex3':4,'ex4':3,'re1':5,'re2':5,'re3':3},
+    '2025-Q2': {'d1':5,'d2':5,'d3':5,'s1':5,'s2':5,'s3':5,'s4':5,'s5':5,'s6':5,'s7':5,'s8':5,'sc1':5,'sc2':3,'sc3':2,'sc4':3,'sc5':2,'sc6':2,'sc7':3,'p1':5,'p2':5,'p3':3,'p4':3,'p5':3,'p6':2,'p7':4,'p8':5,'pr1':3,'pr2':3,'pr3':5,'pr4':5,'pr5':4,'pd1':4,'pd2':4,'pd3':4,'pd4':4,'r1':2,'r2':3,'r3':5,'r4':3,'r5':3,'r6':3,'e1':2,'e2':3,'e3':1,'e4':3,'e5':1,'e6':5,'ex1':5,'ex2':5,'ex3':5,'ex4':3,'re1':5,'re2':5,'re3':3},
+    '2025-Q3': {'d1':5,'d2':5,'d3':5,'s1':5,'s2':5,'s3':5,'s4':5,'s5':5,'s6':5,'s7':5,'s8':5,'sc1':5,'sc2':3,'sc3':2,'sc4':3,'sc5':2,'sc6':2,'sc7':3,'p1':5,'p2':5,'p3':3,'p4':3,'p5':3,'p6':2,'p7':4,'p8':5,'pr1':3,'pr2':3,'pr3':5,'pr4':5,'pr5':4,'pd1':4,'pd2':4,'pd3':4,'pd4':4,'r1':2,'r2':3,'r3':5,'r4':3,'r5':3,'r6':3,'e1':2,'e2':3,'e3':1,'e4':3,'e5':1,'e6':5,'ex1':5,'ex2':5,'ex3':5,'ex4':3,'re1':5,'re2':5,'re3':3},
+    '2025-Q4': {'d1':5,'d2':5,'d3':5,'s1':5,'s2':5,'s3':5,'s4':5,'s5':5,'s6':5,'s7':5,'s8':5,'sc1':5,'sc2':4,'sc3':3,'sc4':4,'sc5':3,'sc6':2,'sc7':4,'p1':5,'p2':5,'p3':4,'p4':4,'p5':3,'p6':3,'p7':4,'p8':5,'pr1':3,'pr2':3,'pr3':5,'pr4':5,'pr5':4,'pd1':4,'pd2':4,'pd3':4,'pd4':4,'r1':2,'r2':3,'r3':5,'r4':3,'r5':3,'r6':3,'e1':2,'e2':3,'e3':1,'e4':3,'e5':1,'e6':5,'ex1':5,'ex2':5,'ex3':5,'ex4':3,'re1':4,'re2':4,'re3':3},
+  },
+  'Rewind': {
+    '2025-Q4': {'d1':5,'d2':2,'d3':4,'s1':1,'s2':3,'s3':4,'s4':5,'s5':4,'s6':5,'s7':2,'s8':2,'sc1':4,'sc2':3,'sc3':2,'sc4':3,'sc5':2,'sc6':1,'sc7':2,'p1':4,'p2':1,'p3':1,'p4':1,'p5':3,'p6':3,'p7':3,'p8':1,'pr1':2,'pr2':1,'pr3':1,'pr4':1,'pr5':2,'pd1':1,'pd2':3,'pd3':4,'pd4':1,'r1':1,'r2':1,'r3':3,'r4':2,'r5':1,'r6':1,'e1':1,'e2':1,'e3':3,'e4':1,'e5':1,'e6':1,'ex1':5,'ex2':5,'ex3':4,'ex4':4,'re1':2,'re2':2,'re3':3},
+  },
+  'Ripple': {
+    '2025-Q1': {'d1':3,'d2':2,'d3':4,'s1':2,'s2':3,'s3':2,'s4':2,'s5':2,'s6':2,'s7':2,'s8':2,'sc1':1,'sc2':2,'sc3':2,'sc4':2,'sc5':2,'sc6':1,'sc7':2,'p1':2,'p2':2,'p3':1,'p4':1,'p5':2,'p6':1,'p7':1,'p8':1,'pr1':4,'pr2':4,'pr3':1,'pr4':1,'pr5':3,'pd1':1,'pd2':4,'pd3':4,'pd4':4,'r1':1,'r2':1,'r3':3,'r4':1,'r5':1,'r6':1,'e1':1,'e2':1,'e3':1,'e4':1,'e5':1,'e6':1,'ex1':4,'ex2':1,'ex3':1,'ex4':4,'re1':5,'re2':5,'re3':2},
+    '2025-Q2': {'d1':3,'d2':2,'d3':4,'s1':2,'s2':3,'s3':2,'s4':2,'s5':2,'s6':2,'s7':2,'s8':2,'sc1':3,'sc2':3,'sc3':3,'sc4':2,'sc5':2,'sc6':2,'sc7':2,'p1':4,'p2':2,'p3':1,'p4':1,'p5':2,'p6':1,'p7':2,'p8':1,'pr1':3,'pr2':4,'pr3':1,'pr4':1,'pr5':3,'pd1':1,'pd2':4,'pd3':4,'pd4':4,'r1':1,'r2':1,'r3':3,'r4':1,'r5':1,'r6':1,'e1':1,'e2':1,'e3':1,'e4':1,'e5':1,'e6':1,'ex1':4,'ex2':1,'ex3':2,'ex4':4,'re1':5,'re2':5,'re3':4},
+    '2025-Q3': {'d1':3,'d2':3,'d3':4,'s1':2,'s2':3,'s3':2,'s4':2,'s5':2,'s6':2,'s7':2,'s8':2,'sc1':3,'sc2':3,'sc3':3,'sc4':2,'sc5':2,'sc6':2,'sc7':2,'p1':4,'p2':2,'p3':1,'p4':1,'p5':2,'p6':1,'p7':2,'p8':1,'pr1':3,'pr2':4,'pr3':1,'pr4':1,'pr5':3,'pd1':1,'pd2':4,'pd3':4,'pd4':4,'r1':1,'r2':1,'r3':3,'r4':1,'r5':1,'r6':1,'e1':1,'e2':1,'e3':1,'e4':1,'e5':1,'e6':1,'ex1':4,'ex2':1,'ex3':2,'ex4':4,'re1':5,'re2':5,'re3':4},
+    '2025-Q4': {'d1':4,'d2':3,'d3':4,'s1':2,'s2':3,'s3':2,'s4':3,'s5':2,'s6':2,'s7':2,'s8':2,'sc1':3,'sc2':3,'sc3':3,'sc4':2,'sc5':2,'sc6':2,'sc7':2,'p1':4,'p2':2,'p3':1,'p4':1,'p5':2,'p6':1,'p7':2,'p8':1,'pr1':4,'pr2':4,'pr3':1,'pr4':1,'pr5':3,'pd1':1,'pd2':4,'pd3':4,'pd4':4,'r1':1,'r2':1,'r3':4,'r4':1,'r5':1,'r6':1,'e1':1,'e2':1,'e3':1,'e4':1,'e5':1,'e6':1,'ex1':4,'ex2':1,'ex3':2,'ex4':4,'re1':5,'re2':3,'re3':3},
+  },
+  'Total Seminars': {
+    '2025-Q1': {'d1':2,'d2':2,'d3':1,'s1':1,'s2':1,'s3':1,'s4':3,'s5':1,'s6':1,'s7':4,'s8':2,'sc1':1,'sc2':1,'sc3':1,'sc4':1,'sc5':1,'sc6':1,'sc7':1,'p1':1,'p2':4,'p3':1,'p4':1,'p5':2,'p6':2,'p7':2,'p8':1,'pr1':2,'pr2':2,'pr3':3,'pr4':3,'pr5':2,'pd1':1,'pd2':2,'pd3':1,'pd4':1,'r1':1,'r2':1,'r3':1,'r4':1,'r5':1,'r6':3,'e1':2,'e2':2,'e3':3,'e4':1,'e5':2,'e6':1,'ex1':1,'ex2':1,'ex3':1,'ex4':2,'re1':1,'re2':1,'re3':1},
+    '2025-Q2': {'d1':1,'d2':1,'d3':2,'s1':1,'s2':1,'s3':3,'s4':3,'s5':1,'s6':1,'s7':4,'s8':2,'sc1':2,'sc2':2,'sc3':2,'sc4':1,'sc5':1,'sc6':1,'sc7':1,'p1':1,'p2':2,'p3':1,'p4':1,'p5':2,'p6':2,'p7':2,'p8':1,'pr1':2,'pr2':2,'pr3':3,'pr4':3,'pr5':2,'pd1':3,'pd2':2,'pd3':2,'pd4':2,'r1':1,'r2':1,'r3':2,'r4':1,'r5':1,'r6':3,'e1':2,'e2':2,'e3':3,'e4':1,'e5':1,'e6':1,'ex1':1,'ex2':1,'ex3':1,'ex4':1,'re1':1,'re2':1,'re3':1},
+    '2025-Q3': {'d1':1,'d2':1,'d3':2,'s1':1,'s2':1,'s3':3,'s4':3,'s5':1,'s6':1,'s7':4,'s8':2,'sc1':2,'sc2':2,'sc3':2,'sc4':1,'sc5':1,'sc6':1,'sc7':1,'p1':1,'p2':2,'p3':1,'p4':1,'p5':2,'p6':2,'p7':2,'p8':1,'pr1':2,'pr2':2,'pr3':3,'pr4':3,'pr5':2,'pd1':3,'pd2':2,'pd3':2,'pd4':2,'r1':1,'r2':1,'r3':2,'r4':1,'r5':1,'r6':3,'e1':2,'e2':2,'e3':3,'e4':1,'e5':1,'e6':1,'ex1':1,'ex2':1,'ex3':1,'ex4':1,'re1':1,'re2':1,'re3':1},
+    '2025-Q4': {'d1':3,'d2':3,'d3':2,'s1':1,'s2':1,'s3':3,'s4':3,'s5':1,'s6':1,'s7':4,'s8':2,'sc1':3,'sc2':3,'sc3':1,'sc4':1,'sc5':1,'sc6':1,'sc7':1,'p1':1,'p2':4,'p3':1,'p4':1,'p5':2,'p6':2,'p7':2,'p8':1,'pr1':2,'pr2':2,'pr3':3,'pr4':3,'pr5':3,'pd1':1,'pd2':2,'pd3':1,'pd4':1,'r1':1,'r2':1,'r3':2,'r4':1,'r5':1,'r6':3,'e1':2,'e2':2,'e3':3,'e4':1,'e5':2,'e6':1,'ex1':1,'ex2':1,'ex3':1,'ex4':2,'re1':1,'re2':1,'re3':1},
+  },
+  'United': {
+    '2025-Q1': {'d1':4,'d2':4,'d3':4,'s1':5,'s2':5,'s3':4,'s4':4,'s5':5,'s6':5,'s7':5,'s8':5,'sc1':5,'sc2':5,'sc3':3,'sc4':5,'sc5':4,'sc6':4,'sc7':2,'p1':3,'p2':3,'p3':3,'p4':4,'p5':3,'p6':5,'p7':5,'p8':5,'pr1':5,'pr2':5,'pr3':5,'pr4':5,'pr5':5,'pd1':5,'pd2':4,'pd3':5,'pd4':4,'r1':3,'r2':4,'r3':5,'r4':4,'r5':3,'r6':5,'e1':5,'e2':4,'e3':4,'e4':4,'e5':4,'e6':5,'ex1':5,'ex2':5,'ex3':5,'ex4':5,'re1':5,'re2':5,'re3':4},
+    '2025-Q2': {'d1':4,'d2':4,'d3':4,'s1':5,'s2':5,'s3':4,'s4':4,'s5':5,'s6':5,'s7':5,'s8':5,'sc1':5,'sc2':5,'sc3':3,'sc4':5,'sc5':4,'sc6':4,'sc7':3,'p1':3,'p2':4,'p3':3,'p4':4,'p5':3,'p6':5,'p7':5,'p8':5,'pr1':5,'pr2':5,'pr3':5,'pr4':5,'pr5':5,'pd1':5,'pd2':4,'pd3':5,'pd4':4,'r1':4,'r2':4,'r3':5,'r4':4,'r5':3,'r6':5,'e1':5,'e2':4,'e3':4,'e4':4,'e5':4,'e6':5,'ex1':5,'ex2':5,'ex3':5,'ex4':5,'re1':5,'re2':5,'re3':4},
+    '2025-Q3': {'d1':3,'d2':3,'d3':3,'s1':5,'s2':5,'s3':4,'s4':4,'s5':5,'s6':5,'s7':5,'s8':5,'sc1':5,'sc2':5,'sc3':3,'sc4':5,'sc5':4,'sc6':4,'sc7':3,'p1':3,'p2':4,'p3':3,'p4':3,'p5':3,'p6':5,'p7':5,'p8':5,'pr1':5,'pr2':5,'pr3':5,'pr4':5,'pr5':5,'pd1':5,'pd2':4,'pd3':5,'pd4':4,'r1':4,'r2':4,'r3':5,'r4':4,'r5':3,'r6':5,'e1':5,'e2':4,'e3':4,'e4':4,'e5':4,'e6':5,'ex1':5,'ex2':5,'ex3':5,'ex4':5,'re1':3,'re2':3,'re3':4},
+    '2025-Q4': {'d1':4,'d2':4,'d3':3,'s1':5,'s2':5,'s3':4,'s4':4,'s5':5,'s6':5,'s7':5,'s8':5,'sc1':5,'sc2':5,'sc3':3,'sc4':5,'sc5':4,'sc6':4,'sc7':3,'p1':4,'p2':4,'p3':4,'p4':4,'p5':3,'p6':5,'p7':5,'p8':5,'pr1':5,'pr2':5,'pr3':5,'pr4':5,'pr5':5,'pd1':5,'pd2':4,'pd3':5,'pd4':4,'r1':4,'r2':4,'r3':5,'r4':4,'r5':3,'r6':5,'e1':5,'e2':4,'e3':4,'e4':4,'e5':4,'e6':5,'ex1':5,'ex2':5,'ex3':5,'ex4':5,'re1':2,'re2':2,'re3':3},
+  },
+  'Urgent': {
+    '2025-Q1': {'d1':5,'d2':4,'d3':5,'s1':3,'s2':5,'s3':3,'s4':4,'s5':5,'s6':5,'s7':2,'s8':2,'sc1':4,'sc2':3,'sc3':2,'sc4':4,'sc5':3,'sc6':1,'sc7':4,'p1':2,'p2':2,'p3':1,'p4':1,'p5':2,'p6':1,'p7':1,'p8':1,'pr1':2,'pr2':1,'pr3':1,'pr4':1,'pr5':2,'pd1':1,'pd2':4,'pd3':2,'pd4':2,'r1':2,'r2':3,'r3':5,'r4':2,'r5':2,'r6':4,'e1':2,'e2':1,'e3':1,'e4':1,'e5':3,'e6':1,'ex1':2,'ex2':3,'ex3':2,'ex4':2,'re1':1,'re2':1,'re3':2},
+    '2025-Q2': {'d1':5,'d2':4,'d3':4,'s1':3,'s2':5,'s3':3,'s4':5,'s5':5,'s6':5,'s7':3,'s8':2,'sc1':5,'sc2':3,'sc3':3,'sc4':4,'sc5':3,'sc6':1,'sc7':4,'p1':3,'p2':2,'p3':1,'p4':1,'p5':3,'p6':1,'p7':1,'p8':1,'pr1':3,'pr2':2,'pr3':2,'pr4':1,'pr5':2,'pd1':1,'pd2':4,'pd3':2,'pd4':2,'r1':2,'r2':2,'r3':5,'r4':2,'r5':1,'r6':4,'e1':1,'e2':1,'e3':1,'e4':2,'e5':3,'e6':1,'ex1':2,'ex2':4,'ex3':2,'ex4':3,'re1':3,'re2':1,'re3':2},
+    '2025-Q3': {'d1':5,'d2':4,'d3':4,'s1':3,'s2':5,'s3':3,'s4':5,'s5':5,'s6':5,'s7':4,'s8':2,'sc1':5,'sc2':3,'sc3':4,'sc4':4,'sc5':3,'sc6':1,'sc7':4,'p1':3,'p2':2,'p3':1,'p4':1,'p5':3,'p6':1,'p7':1,'p8':1,'pr1':4,'pr2':2,'pr3':2,'pr4':1,'pr5':2,'pd1':1,'pd2':4,'pd3':3,'pd4':2,'r1':2,'r2':2,'r3':5,'r4':1,'r5':1,'r6':4,'e1':1,'e2':1,'e3':1,'e4':1,'e5':3,'e6':1,'ex1':1,'ex2':4,'ex3':2,'ex4':3,'re1':2,'re2':1,'re3':3},
+    '2025-Q4': {'d1':4,'d2':4,'d3':3,'s1':3,'s2':5,'s3':3,'s4':5,'s5':5,'s6':5,'s7':4,'s8':2,'sc1':3,'sc2':3,'sc3':4,'sc4':4,'sc5':4,'sc6':1,'sc7':3,'p1':3,'p2':2,'p3':1,'p4':1,'p5':3,'p6':1,'p7':1,'p8':1,'pr1':4,'pr2':2,'pr3':2,'pr4':1,'pr5':2,'pd1':1,'pd2':4,'pd3':3,'pd4':2,'r1':2,'r2':2,'r3':5,'r4':1,'r5':1,'r6':5,'e1':1,'e2':1,'e3':1,'e4':2,'e5':2,'e6':1,'ex1':1,'ex2':3,'ex3':2,'ex4':3,'re1':2,'re2':1,'re3':3},
+  },
+  'Zollege': {
+    '2024-Q3': {'d1':2,'d2':2,'d3':2,'s1':2,'s2':2,'s3':1,'s4':3,'s5':3,'s6':2,'s7':2,'s8':2,'sc1':3,'sc2':3,'sc3':3,'sc4':3,'sc5':2,'sc6':2,'sc7':2,'p1':1,'p2':2,'p3':2,'p4':2,'p5':2,'p6':2,'p7':2,'p8':2,'pr1':2,'pr2':3,'pr3':2,'pr4':3,'pr5':3,'pd1':1,'pd2':1,'pd3':2,'pd4':1,'r1':3,'r2':3,'r3':3,'r4':2,'r5':1,'r6':3,'e1':2,'e2':2,'e3':2,'e4':1,'e5':1,'e6':1,'ex1':1,'ex2':1,'ex3':2,'ex4':1,'re1':3,'re2':3,'re3':2},
+    '2024-Q4': {'d1':3,'d2':3,'d3':4,'s1':2,'s2':4,'s3':2,'s4':4,'s5':4,'s6':4,'s7':4,'s8':2,'sc1':4,'sc2':4,'sc3':3,'sc4':4,'sc5':3,'sc6':4,'sc7':2,'p1':1,'p2':4,'p3':3,'p4':3,'p5':3,'p6':3,'p7':4,'p8':3,'pr1':3,'pr2':4,'pr3':3,'pr4':4,'pr5':3,'pd1':1,'pd2':1,'pd3':3,'pd4':1,'r1':4,'r2':4,'r3':4,'r4':2,'r5':1,'r6':3,'e1':3,'e2':3,'e3':3,'e4':1,'e5':1,'e6':1,'ex1':2,'ex2':1,'ex3':2,'ex4':3,'re1':5,'re2':5,'re3':2},
+    '2025-Q1': {'d1':3,'d2':3,'d3':3,'s1':3,'s2':4,'s3':4,'s4':5,'s5':5,'s6':5,'s7':4,'s8':3,'sc1':5,'sc2':5,'sc3':3,'sc4':5,'sc5':5,'sc6':5,'sc7':4,'p1':2,'p2':5,'p3':5,'p4':5,'p5':4,'p6':3,'p7':5,'p8':4,'pr1':4,'pr2':4,'pr3':4,'pr4':4,'pr5':3,'pd1':3,'pd2':3,'pd3':4,'pd4':5,'r1':4,'r2':4,'r3':5,'r4':3,'r5':1,'r6':4,'e1':3,'e2':4,'e3':4,'e4':3,'e5':2,'e6':3,'ex1':4,'ex2':3,'ex3':3,'ex4':5,'re1':5,'re2':4,'re3':2},
+    '2025-Q2': {'d1':4,'d2':3,'d3':3,'s1':3,'s2':5,'s3':4,'s4':5,'s5':5,'s6':5,'s7':4,'s8':3,'sc1':5,'sc2':5,'sc3':4,'sc4':5,'sc5':5,'sc6':5,'sc7':4,'p1':3,'p2':5,'p3':5,'p4':5,'p5':4,'p6':3,'p7':5,'p8':4,'pr1':4,'pr2':4,'pr3':4,'pr4':4,'pr5':4,'pd1':3,'pd2':3,'pd3':5,'pd4':5,'r1':4,'r2':4,'r3':5,'r4':4,'r5':2,'r6':4,'e1':3,'e2':4,'e3':4,'e4':3,'e5':3,'e6':3,'ex1':4,'ex2':3,'ex3':4,'ex4':5,'re1':5,'re2':4,'re3':3},
+    '2025-Q3': {'d1':4,'d2':3,'d3':3,'s1':3,'s2':4,'s3':4,'s4':5,'s5':5,'s6':5,'s7':5,'s8':4,'sc1':5,'sc2':5,'sc3':4,'sc4':5,'sc5':5,'sc6':5,'sc7':4,'p1':4,'p2':5,'p3':5,'p4':4,'p5':3,'p6':4,'p7':5,'p8':4,'pr1':4,'pr2':5,'pr3':4,'pr4':5,'pr5':4,'pd1':3,'pd2':3,'pd3':5,'pd4':5,'r1':4,'r2':4,'r3':5,'r4':4,'r5':2,'r6':4,'e1':3,'e2':4,'e3':4,'e4':3,'e5':3,'e6':3,'ex1':4,'ex2':3,'ex3':4,'ex4':5,'re1':5,'re2':5,'re3':3},
+    '2025-Q4': {'d1':4,'d2':3,'d3':4,'s1':4,'s2':4,'s3':4,'s4':5,'s5':5,'s6':5,'s7':5,'s8':4,'sc1':5,'sc2':5,'sc3':4,'sc4':5,'sc5':5,'sc6':5,'sc7':4,'p1':4,'p2':5,'p3':5,'p4':4,'p5':4,'p6':4,'p7':5,'p8':4,'pr1':4,'pr2':5,'pr3':4,'pr4':5,'pr5':4,'pd1':3,'pd2':3,'pd3':5,'pd4':5,'r1':4,'r2':4,'r3':5,'r4':4,'r5':2,'r6':4,'e1':3,'e2':4,'e3':4,'e4':3,'e5':3,'e6':3,'ex1':4,'ex2':3,'ex3':4,'ex4':5,'re1':5,'re2':5,'re3':3},
+  },
+};
+
+// Quarters with pre-existing scores from LP First records — treated as locked
+const SEED_LOCKED = {
+  United:           ['2025-Q1','2025-Q2','2025-Q3','2025-Q4'],
+  Ripple:           ['2025-Q1','2025-Q2','2025-Q3','2025-Q4'],
+  Ramp:             ['2025-Q1','2025-Q2','2025-Q3','2025-Q4'],
+  'Total Seminars': ['2025-Q1','2025-Q2','2025-Q3','2025-Q4'],
+  'Open Road':      ['2025-Q1','2025-Q2','2025-Q3','2025-Q4'],
+  Cascade:          ['2025-Q1','2025-Q2','2025-Q3','2025-Q4'],
+  Alpha:            ['2025-Q1','2025-Q2','2025-Q3','2025-Q4'],
+  'Fastest Labs':   ['2024-Q4','2025-Q1','2025-Q2','2025-Q3','2025-Q4'],
+  Northpoint:       ['2025-Q1','2025-Q2','2025-Q3','2025-Q4'],
+  Urgent:           ['2025-Q1','2025-Q2','2025-Q3','2025-Q4'],
+  Zollege:          ['2024-Q3','2024-Q4','2025-Q1','2025-Q2','2025-Q3','2025-Q4'],
+  REI:              ['2025-Q1','2025-Q2','2025-Q3','2025-Q4'],
+  Curb:             ['2025-Q1','2025-Q2','2025-Q3','2025-Q4'],
+  Rewind:           ['2025-Q4'],
+};
+
+function isSeedLocked(platform, year, quarter){
+  const key = `${year}-${quarter}`;
+  return (SEED_LOCKED[platform] || []).includes(key);
+}
+
+document.getElementById('platform-sel').addEventListener('change', checkExisting);
+document.getElementById('year-sel').addEventListener('change', checkExisting);
+document.getElementById('q-sel').addEventListener('change', checkExisting);
+
+async function checkExisting(){
+  const p = document.getElementById('platform-sel').value;
+  const y = document.getElementById('year-sel').value;
+  const q = document.getElementById('q-sel').value;
+  if(!p) return;
+  const ex = await loadExisting(p, y, q);
+  const isLocked = isSeedLocked(p, y, q) || (ex && ex.submitted);
+  const isDraft  = !isLocked && ex && !ex.submitted;
+  document.getElementById('existing-note').style.display = isDraft ? 'block' : 'none';
+  document.getElementById('locked-note').style.display   = isLocked ? 'block' : 'none';
+  document.querySelector('.btn-start').disabled = isLocked;
+  document.querySelector('.btn-start').style.opacity = isLocked ? '0.4' : '1';
+  document.querySelector('.btn-start').style.cursor  = isLocked ? 'not-allowed' : 'pointer';
+}
+
+async function startScorecard(){
+  const p = document.getElementById('platform-sel').value;
+  const y = document.getElementById('year-sel').value;
+  const q = document.getElementById('q-sel').value;
+  if(!p){ showToast('Please select your platform','warning'); return; }
+  if(isSeedLocked(p, y, q)){ showToast('This quarter is locked','warning'); return; }
+  state.platform = p;
+  state.year = y;
+  state.quarter = q;
+
+  const existing = await loadExisting(p, y, q);
+  if(existing){
+    state.scores = existing.scores || {};
+    state.comments = existing.comments || {};
+    state.submitted = existing.submitted || false;
+  }
+
+  // load prior quarter for reference
+  state.priorScores = {};
+  state.priorPeriod = '';
+  const allPeriods = [
+    ['2024','Q1'],['2024','Q2'],['2024','Q3'],['2024','Q4'],
+    ['2025','Q1'],['2025','Q2'],['2025','Q3'],['2025','Q4'],
+    ['2026','Q1'],['2026','Q2'],['2026','Q3'],['2026','Q4'],
+    ['2027','Q1'],['2027','Q2'],['2027','Q3'],['2027','Q4']
+  ];
+  const curIdx = allPeriods.findIndex(([yr,qt])=>yr===y&&qt===q);
+  if(curIdx > 0){
+    // walk backwards to find the most recent quarter with scores
+    for(let i = curIdx - 1; i >= 0; i--){
+      const [pyr,pqt] = allPeriods[i];
+      const seedPrev = `${pyr}-${pqt}`;
+      // check seed data first (most reliable for historical quarters)
+      if(SEED_SCORES[p]?.[seedPrev]){
+        state.priorScores = SEED_SCORES[p][seedPrev];
+        state.priorPeriod = `${pqt} ${pyr}`;
+        break;
+      }
+      // then check Google Sheets for app-submitted quarters
+      const prior = await loadExisting(p, pyr, pqt);
+      if(prior && prior.scores && Object.keys(prior.scores).length > 0){
+        state.priorScores = prior.scores;
+        state.priorPeriod = `${pqt} ${pyr}`;
+        break;
+      }
+    }
+  }
+
+  // build full score history — seed data first, then any app-submitted quarters from GAS
+  state.scoreHistory = [];
+
+  // batch load all submitted quarters for this platform from GAS in one call
+  let gasSubmissions = {};
+  try{
+    const rows = await gasGet({ action:'getScores', platform: p });
+    if(rows && Array.isArray(rows)){
+      for(const r of rows){
+        const key = `${r.year}-${r.quarter}`;
+        if(r.scores && typeof r.scores === 'object') gasSubmissions[key] = r.scores;
+      }
+    }
+  }catch(e){}
+
+  for(const [hyr,hqt] of allPeriods){
+    const hkey = `${hyr}-${hqt}`;
+    if(hkey === `${y}-${q}`) break; // stop before current quarter
+    // seed data takes priority (verified from uploaded files)
+    const seedScores = SEED_SCORES[p]?.[hkey];
+    if(seedScores && Object.keys(seedScores).length > 0){
+      state.scoreHistory.push({ period:`${hqt} ${hyr}`, scores: seedScores });
+    } else if(gasSubmissions[hkey] && Object.keys(gasSubmissions[hkey]).length > 0){
+      state.scoreHistory.push({ period:`${hqt} ${hyr}`, scores: gasSubmissions[hkey] });
+    }
+    // platforms with no history for this quarter simply don't get a column
+  }
+
+  document.getElementById('setup-screen').classList.add('hidden');
+  document.getElementById('scorecard-wrap').classList.remove('hidden');
+  document.getElementById('action-bar').classList.remove('hidden');
+  document.getElementById('quarter-badge').textContent = `${q} ${y}`;
+  document.getElementById('sc-platform-name').textContent = p;
+  document.getElementById('sc-quarter-tag').textContent = `${q} ${y} · LBS Scorecard`;
+
+  // always reset to grade tab
+  switchTab('grade');
+
+  // show copy-prior button if prior scores exist and current quarter is empty
+  const hasCurrentScores = Object.keys(state.scores).length > 0;
+  const hasPrior = Object.keys(state.priorScores).length > 0;
+  const copyBtn = document.getElementById('copy-prior-btn');
+  if(hasPrior && !hasCurrentScores){
+    copyBtn.style.display = 'inline-flex';
+    copyBtn.textContent = `↩ Keep ${state.priorPeriod} Scores`;
+  } else {
+    copyBtn.style.display = 'none';
+  }
+
+  if(state.submitted){
+    document.getElementById('submitted-banner').classList.remove('hidden');
+  }
+
+  renderCatSummary();
+  renderHistPanel();
+  renderSections();
+  refreshTotals();
+}
+
+// ─────────────────────────────────────────────
+// HISTORY
+// ─────────────────────────────────────────────
+const HIST = {
+  Zollege: [
+    {period:'Q3 2024',score:74},{period:'Q4 2024',score:104.6},
+    {period:'Q1 2025',score:135},{period:'Q2 2025',score:142.2},
+    {period:'Q3 2025',score:144.8},{period:'Q4 2025',score:146.8}
+  ]
+};
+
+async function renderHistory(){
+  const hist = [];
+  const quarters = ['Q1','Q2','Q3','Q4'];
+  const years = ['2024','2025'];
+  for(const yr of years){
+    for(const qt of quarters){
+      if(yr==='2024' && (qt==='Q1'||qt==='Q2')) continue;
+      if(yr===state.year && qt===state.quarter) break;
+      try{
+        const rows = await gasGet({action:'getScores', platform:state.platform, year:yr, quarter:qt});
+        if(rows && rows.length > 0 && rows[0].overall_score) hist.push({period:`${qt} ${yr}`, score:parseFloat(rows[0].overall_score)});
+      }catch(e){}
+    }
+  }
+  // merge with known history
+  const known = HIST[state.platform] || [];
+  const all = [...known];
+  for(const h of hist){
+    if(!all.find(x=>x.period===h.period)) all.push(h);
+  }
+  all.sort((a,b)=>a.period.localeCompare(b.period));
+
+  if(all.length === 0){
+    document.getElementById('history-strip').style.display = 'none';
+    return;
+  }
+  document.getElementById('history-strip').style.display = 'block';
+  const max = Math.max(...all.map(h=>h.score), 1);
+  const bars = document.getElementById('history-bars');
+  bars.innerHTML = all.map((h,i)=>`
+    <div class="h-bar-wrap">
+      <div class="h-score">${Math.round(h.score)}</div>
+      <div class="h-bar${i===all.length-1?' current':''}" style="height:${Math.round((h.score/max)*40)+4}px"></div>
+      <div class="h-period">${h.period}</div>
+    </div>
+  `).join('');
+}
+
+// ─────────────────────────────────────────────
+// COMPUTE
+// ─────────────────────────────────────────────
+function computeSectionTotals(){
+  const totals = {};
+  for(const sec of SECTIONS){
+    let raw = 0;
+    for(const sg of sec.subgroups)
+      for(const obj of sg.objectives)
+        raw += (state.scores[obj.id] || 0);
+    totals[sec.id] = { raw, weighted: parseFloat((raw * sec.weightVal).toFixed(2)) };
+  }
+  return totals;
+}
+
+function computeOverall(){
+  const t = computeSectionTotals();
+  return parseFloat(Object.values(t).reduce((a,v)=>a+v.weighted,0).toFixed(1));
+}
+
+function maxOverall(){
+  return SECTIONS.reduce((a,s)=>a + s.maxRaw * s.weightVal, 0);
+}
+
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
+function switchTab(tab){
+  document.getElementById('tab-content-grade').classList.toggle('hidden', tab!=='grade');
+  document.getElementById('tab-content-history').classList.toggle('hidden', tab!=='history');
+  document.getElementById('tab-grade').classList.toggle('active', tab==='grade');
+  document.getElementById('tab-history').classList.toggle('active', tab==='history');
+}
+
+function renderHistPanel(){
+  const tbl = document.getElementById('hist-table');
+
+  // For platforms with no history at all, show a single N/A column
+  if(!state.scoreHistory || state.scoreHistory.length === 0){
+    let html = `<thead><tr><th class="obj-col">Objective</th><th style="color:var(--ink4)">No prior history</th></tr></thead><tbody>`;
+    for(const sec of SECTIONS){
+      html += `<tr class="sec-row"><td colspan="2">${sec.name}</td></tr>`;
+      for(const obj of sec.subgroups.flatMap(sg=>sg.objectives)){
+        html += `<tr><td class="obj-name">${obj.label}</td><td><span class="hs hs-0">N/A</span></td></tr>`;
+      }
+    }
+    tbl.innerHTML = html + '</tbody>';
+    return;
+  }
+
+  const periods = state.scoreHistory.map(h=>h.period);
+  let html = `<thead><tr><th class="obj-col">Objective</th>${periods.map(p=>`<th>${p}</th>`).join('')}</tr></thead><tbody>`;
+  for(const sec of SECTIONS){
+    html += `<tr class="sec-row"><td colspan="${periods.length+1}">${sec.name}</td></tr>`;
+    for(const obj of sec.subgroups.flatMap(sg=>sg.objectives)){
+      const cells = periods.map((_,i)=>{
+        const s = state.scoreHistory[i]?.scores?.[obj.id];
+        if(!s || s === 0) return `<td><span class="hs hs-0">—</span></td>`;
+        return `<td><span class="hs hs-${s}">${s}</span></td>`;
+      }).join('');
+      html += `<tr><td class="obj-name">${obj.label}</td>${cells}</tr>`;
+    }
+  }
+  tbl.innerHTML = html + '</tbody>';
+}
+
+function renderCatSummary(){
+  const wrap = document.getElementById('cat-summary');
+  wrap.innerHTML = SECTIONS.map(sec=>{
+    const tot = computeSectionTotals();
+    const pct = sec.maxRaw > 0 ? tot[sec.id].raw / (sec.maxRaw) : 0;
+    return `<div class="cat-bar-item">
+      <div class="cat-bar-name">${sec.name}</div>
+      <div class="cat-bar-score" style="color:${pct>.75?'var(--teal)':pct>.4?'var(--blue)':'var(--ink3)'}">${tot[sec.id].weighted.toFixed(1)}</div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${Math.round(pct*100)}%;background:${pct>.75?'var(--teal)':pct>.4?'var(--blue)':'var(--rule2)'}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderSections(){
+  const wrap = document.getElementById('sections-wrap');
+  wrap.innerHTML = '';
+  SECTIONS.forEach((sec,idx)=>{
+    const el = document.createElement('div');
+    el.className = 'section-card';
+    el.id = `sec-card-${sec.id}`;
+
+    const wtClass = sec.weight==='High'?'wt-high':sec.weight==='Medium'?'wt-med':'wt-low';
+    const totals = computeSectionTotals();
+
+    const allObjs = sec.subgroups.flatMap(sg=>sg.objectives);
+    const bodyHtml = sec.subgroups.map(sg=>`
+      <div class="subgroup">
+        <div class="subgroup-name">${sg.name}${state.priorPeriod?`<span style="float:right;font-size:10px;color:var(--ink3);font-weight:400;text-transform:none;letter-spacing:0">${state.priorPeriod} scores shown</span>`:''}</div>
+        ${sg.objectives.map(obj=>{
+          const prior = state.priorScores[obj.id];
+          const priorBadge = prior != null
+            ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;background:var(--paper3);color:var(--ink3);flex-shrink:0" title="Prior quarter: ${state.priorPeriod}">Prior: ${prior}</span>`
+            : '';
+          return `
+          <div class="obj-row" id="obj-${obj.id}">
+            <div class="obj-top">
+              <div class="obj-label">${obj.label}</div>
+              <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+                ${priorBadge}
+                <div class="score-row">
+                  ${[1,2,3,4,5].map(n=>`<button class="s-btn${state.scores[obj.id]===n?` sel-${n}`:''}" data-obj="${obj.id}" data-score="${n}" onclick="setScore('${obj.id}',${n})">${n}</button>`).join('')}
+                </div>
+              </div>
+            </div>
+            <div class="criteria-bar">
+              <div class="criteria-pill criteria-1"><div class="criteria-label">Score 1</div>${obj.c1}</div>
+              <div class="criteria-pill criteria-5"><div class="criteria-label">Score 5</div>${obj.c5}</div>
+            </div>
+            <div class="obj-comment">
+              <textarea class="comment-in" placeholder="Add comment (optional)…" oninput="setComment('${obj.id}',this.value)">${state.comments[obj.id]||''}</textarea>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    `).join('');
+
+    el.innerHTML = `
+      <div class="section-head" onclick="toggleSection('${sec.id}')">
+        <div class="section-head-left">
+          <div class="section-num">${idx+1}</div>
+          <div class="section-title">${sec.name}</div>
+          <span class="section-wt ${wtClass}">${sec.weight}</span>
+        </div>
+        <div class="section-head-right">
+          <span class="section-pts" id="sec-pts-${sec.id}">${totals[sec.id].weighted.toFixed(1)}</span>
+          <span class="section-pts-max">/ ${(sec.maxRaw*sec.weightVal).toFixed(0)}</span>
+          <span class="section-arrow" id="sec-arrow-${sec.id}">▾</span>
+        </div>
+      </div>
+      <div class="section-body collapsible-content" id="sec-body-${sec.id}" style="display:none">
+        ${bodyHtml}
+      </div>
+    `;
+    wrap.appendChild(el);
+  });
+}
+
+function toggleSection(id){
+  const body = document.getElementById(`sec-body-${id}`);
+  const arrow = document.getElementById(`sec-arrow-${id}`);
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  arrow.classList.toggle('open', !isOpen);
+}
+
+function setScore(objId, score){
+  state.scores[objId] = score;
+  // update buttons
+  document.querySelectorAll(`[data-obj="${objId}"]`).forEach(btn=>{
+    btn.className = `s-btn${parseInt(btn.dataset.score)===score?` sel-${score}`:''}`;
+  });
+  refreshTotals();
+}
+
+function setComment(objId, val){
+  state.comments[objId] = val;
+}
+
+function refreshTotals(){
+  const totals = computeSectionTotals();
+  const overall = computeOverall();
+  const max = maxOverall();
+
+  document.getElementById('dial-value').textContent = overall.toFixed(1);
+  document.getElementById('dial-max').textContent = Math.round(max);
+  document.getElementById('dial-fill').style.width = Math.round((overall/max)*100)+'%';
+
+  for(const sec of SECTIONS){
+    const el = document.getElementById(`sec-pts-${sec.id}`);
+    if(el) el.textContent = totals[sec.id].weighted.toFixed(1);
+  }
+
+  const allObjs = SECTIONS.flatMap(s=>s.subgroups.flatMap(sg=>sg.objectives));
+  const scored = allObjs.filter(o=>state.scores[o.id]>0).length;
+  document.getElementById('ab-scored').textContent = scored;
+  document.getElementById('ab-total').textContent = allObjs.length;
+
+  renderCatSummary();
+}
+
+// ─────────────────────────────────────────────
+// ACTIONS
+// ─────────────────────────────────────────────
+async function saveDraft(){
+  await saveToStorage(false);
+  showToast('Draft saved');
+}
+
+async function submitScorecard(){
+  const allObjs = SECTIONS.flatMap(s=>s.subgroups.flatMap(sg=>sg.objectives));
+  const scored = allObjs.filter(o=>state.scores[o.id]>0).length;
+  if(scored < allObjs.length * 0.8){
+    showToast(`${allObjs.length - scored} objectives still unscored`, 'warning');
+    return;
+  }
+  await saveToStorage(true);
+  state.submitted = true;
+  await showPostSubmit();
+}
+
+function goBackToScorecard(){
+  document.getElementById('post-submit').style.display='none';
+  document.getElementById('scorecard-wrap').classList.remove('hidden');
+  document.getElementById('action-bar').classList.remove('hidden');
+  document.getElementById('submitted-banner').classList.remove('hidden');
+  if(window._psChart){ window._psChart.destroy(); window._psChart=null; }
+}
+
+async function showPostSubmit(){
+  document.getElementById('scorecard-wrap').classList.add('hidden');
+  document.getElementById('action-bar').classList.add('hidden');
+  const ps = document.getElementById('post-submit');
+  ps.style.display='block';
+  window.scrollTo(0,0);
+
+  const overall = computeOverall();
+  const totals = computeSectionTotals();
+  const q = `${state.quarter} ${state.year}`;
+  document.getElementById('ps-title').textContent = `${state.platform} — ${q}`;
+  document.getElementById('ps-sub').textContent = `Submitted to LP First Capital`;
+  document.getElementById('ps-score-big').textContent = overall.toFixed(1);
+
+  // category summary grid
+  document.getElementById('ps-cat-grid').innerHTML = SECTIONS.map(sec=>{
+    const w = totals[sec.id].weighted;
+    const max = sec.maxRaw * sec.weightVal;
+    const pct = max>0 ? w/max : 0;
+    const col = pct>.75?'var(--teal)':pct>.4?'var(--blue)':'var(--amber)';
+    return `<div class="ps-cat">
+      <div class="ps-cat-name">${sec.name}</div>
+      <div class="ps-cat-score" style="color:${col}">${w.toFixed(1)}</div>
+      <div class="ps-cat-max">of ${max.toFixed(0)}</div>
+      <div class="ps-cat-bar"><div class="ps-cat-fill" style="width:${Math.round(pct*100)}%;background:${col}"></div></div>
+    </div>`;
+  }).join('');
+
+  // ── history chart ──
+  // Compute overall score for each seeded quarter from SEED_SCORES
+  const PERIOD_ORDER = ['2024-Q3','2024-Q4','2025-Q1','2025-Q2','2025-Q3','2025-Q4','2026-Q1','2026-Q2','2026-Q3','2026-Q4'];
+  const histMap = {};
+
+  // Pull from seed data — compute overall from objective scores
+  const seedPlatform = SEED_SCORES[state.platform] || {};
+  for(const [qkey, scores] of Object.entries(seedPlatform)){
+    let total = 0;
+    for(const sec of SECTIONS){
+      let raw = 0;
+      for(const sg of sec.subgroups)
+        for(const obj of sg.objectives)
+          raw += (scores[obj.id] || 0);
+      total += raw * sec.weightVal;
+    }
+    histMap[qkey] = parseFloat(total.toFixed(1));
+  }
+
+  // Pull from storage for any app-submitted quarters
+  const allStoragePeriods = PERIOD_ORDER;
+  for(const period of allStoragePeriods){
+    const [yr, qt] = period.split('-');
+    try{
+      const rows = await gasGet({action:'getScores', platform:state.platform, year:yr, quarter:qt});
+      if(rows && rows.length > 0 && rows[0].overall_score) histMap[period] = parseFloat(rows[0].overall_score);
+    }catch(e){}
+  }
+
+  // Always include current submission
+  const curKey = `${state.year}-${state.quarter}`;
+  histMap[curKey] = overall;
+
+  // Sort by period order and filter to only periods with data
+  const histEntries = PERIOD_ORDER
+    .filter(k => histMap[k] != null)
+    .map(k => ({ period: k, score: histMap[k] }));
+
+  const periodLabel = k => {
+    const [yr, qt] = k.split('-');
+    return `${qt} ${yr}`;
+  };
+
+  if(window._psChart){ window._psChart.destroy(); window._psChart = null; }
+  const ctx = document.getElementById('ps-history-chart').getContext('2d');
+  const isCurrent = histEntries.map(e => e.period === curKey);
+  window._psChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: histEntries.map(e => periodLabel(e.period)),
+      datasets: [{
+        data: histEntries.map(e => e.score),
+        borderColor: '#1a5fa8',
+        borderWidth: 2.5,
+        fill: true,
+        backgroundColor: 'rgba(26,95,168,.07)',
+        tension: 0.35,
+        pointBackgroundColor: histEntries.map((e,i) => isCurrent[i] ? '#1a5fa8' : '#fff'),
+        pointBorderColor: '#1a5fa8',
+        pointBorderWidth: 2,
+        pointRadius: histEntries.map((e,i) => isCurrent[i] ? 7 : 4),
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `LBS Score: ${ctx.raw}` } }
+      },
+      scales: {
+        y: { min: 0, suggestedMax: 200, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { size: 11 } } },
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+      }
+    }
+  });
+  document.getElementById('ps-detail').innerHTML = SECTIONS.map(sec=>{
+    const w = totals[sec.id].weighted;
+    const max = sec.maxRaw * sec.weightVal;
+    const allObjs = sec.subgroups.flatMap(sg=>sg.objectives);
+    const objRows = allObjs.map(obj=>{
+      const s = state.scores[obj.id] || 0;
+      const c = state.comments[obj.id] || '';
+      return `<div class="ps-obj-row">
+        <div>
+          <div class="ps-obj-label">${obj.label}</div>
+          ${c ? `<div class="ps-obj-comment">${c}</div>` : ''}
+        </div>
+        <div class="ps-score-badge ps-s-${s}">${s||'—'}</div>
+      </div>`;
+    }).join('');
+    return `<div class="ps-sec-card">
+      <div class="ps-sec-head">
+        <div class="ps-sec-name">${sec.name} <span style="font-size:11px;font-weight:500;color:var(--ink3);margin-left:6px">${sec.weight} weight</span></div>
+        <div><span class="ps-sec-pts">${w.toFixed(1)}</span><span class="ps-sec-pts-max">/ ${max.toFixed(0)}</span></div>
+      </div>
+      ${objRows}
+    </div>`;
+  }).join('');
+}
+
+function attemptRegrade(){
+  const pin = document.getElementById('regrade-pin').value;
+  if(pin !== '5901'){
+    showToast('Incorrect PIN', 'warning');
+    return;
+  }
+  const p = document.getElementById('platform-sel').value;
+  const y = document.getElementById('year-sel').value;
+  const q = document.getElementById('q-sel').value;
+  // bypass lock and open
+  state.platform = p;
+  state.year = y;
+  state.quarter = q;
+  loadExisting(p, y, q).then(existing => {
+    if(existing){
+      state.scores = existing.scores || {};
+      state.comments = existing.comments || {};
+    }
+    state.submitted = false;
+    document.getElementById('locked-note').style.display = 'none';
+    document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('scorecard-wrap').classList.remove('hidden');
+    document.getElementById('action-bar').classList.remove('hidden');
+    document.getElementById('quarter-badge').textContent = `${q} ${y}`;
+    document.getElementById('sc-platform-name').textContent = p;
+    document.getElementById('sc-quarter-tag').textContent = `${q} ${y} · LBS Scorecard`;
+    document.getElementById('copy-prior-btn').style.display = 'none';
+    renderCatSummary();
+    renderSections();
+    refreshTotals();
+    showToast('Scorecard unlocked for regrading');
+  });
+}
+
+function copyPriorScores(){
+  if(!Object.keys(state.priorScores).length){
+    showToast('No prior quarter scores available', 'warning');
+    return;
+  }
+  state.scores = { ...state.priorScores };
+  document.getElementById('copy-prior-btn').style.display = 'none';
+  renderSections();
+  refreshTotals();
+  showToast(`${state.priorPeriod} scores copied — adjust any that have changed`);
+}
+
+function showToast(msg, type=''){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast${type?' '+type:''} show`;
+  setTimeout(()=>t.classList.remove('show'), 3200);
+}
+</script>
+</body>
+</html>
